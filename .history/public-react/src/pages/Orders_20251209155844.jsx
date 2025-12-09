@@ -783,7 +783,14 @@ function Orders() {
                         </td>
                       )}
                       {canViewActualReceived && (
-                        <td>{formatCurrency(calculateActualReceived(order))}</td>
+                        <td>
+                          {formatCurrency(
+                            order.actualReceivedAmount ??
+                            order.totalAmount ??
+                            order.cod ??
+                            0
+                          )}
+                        </td>
                       )}
                       <td onClick={(e) => e.stopPropagation()}>
                         {(() => {
@@ -903,13 +910,18 @@ function Orders() {
                     </div>
                   )}
                    {canViewActualReceived && (
-                     <div className="order-card-field">
-                       <div className="order-card-label">Tiền thực nhận</div>
-                       <div className="order-card-value">
-                         {formatCurrency(calculateActualReceived(order))}
-                       </div>
-                     </div>
-                   )}
+                    <div className="order-card-field">
+                      <div className="order-card-label">Tiền thực nhận</div>
+                      <div className="order-card-value">
+                        {formatCurrency(
+                          order.actualReceivedAmount ??
+                          order.totalAmount ??
+                          order.cod ??
+                          0
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {canEdit && !blocked && (
                   <div className="order-card-actions d-flex align-items-center gap-1" onClick={(e) => e.stopPropagation()}>

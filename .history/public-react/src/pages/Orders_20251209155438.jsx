@@ -410,24 +410,6 @@ function Orders() {
     }, 0);
   };
 
-  const calculateActualReceived = useCallback((order) => {
-    if (!order) return 0;
-    if (typeof order.actualReceivedAmount === 'number' && order.actualReceivedAmount > 0) {
-      return order.actualReceivedAmount;
-    }
-    const totalAmount = Number(order.totalAmount || 0);
-    const depositAmount = Number(order.depositAmount || 0);
-    const cod = typeof order.cod === 'number'
-      ? order.cod
-      : Math.max(totalAmount - depositAmount, 0);
-    const shippingInstallationPrice = Number(order.shippingInstallationPrice || 0);
-    const customerPaysShipping = order.customerPaysShipping !== false; // mặc định true
-    if (!customerPaysShipping && shippingInstallationPrice > 0) {
-      return Math.max(0, cod - shippingInstallationPrice);
-    }
-    return cod;
-  }, []);
-
   const formatCurrency = (value) => {
     if (value === null || value === undefined || isNaN(value)) return '-';
     try {
@@ -783,7 +765,14 @@ function Orders() {
                         </td>
                       )}
                       {canViewActualReceived && (
-                        <td>{formatCurrency(calculateActualReceived(order))}</td>
+                        <td>
+                          {formatCurrency(
+                            order.actualReceivedAmount ??
+                            order.totalAmount ??
+                            order.cod ??
+                            0
+                          )}
+                        </td>
                       )}
                       <td onClick={(e) => e.stopPropagation()}>
                         {(() => {
@@ -903,13 +892,18 @@ function Orders() {
                     </div>
                   )}
                    {canViewActualReceived && (
-                     <div className="order-card-field">
-                       <div className="order-card-label">Tiền thực nhận</div>
-                       <div className="order-card-value">
-                         {formatCurrency(calculateActualReceived(order))}
-                       </div>
-                     </div>
-                   )}
+                    <div className="order-card-field">
+                      <div className="order-card-label">Tiền thực nhận</div>
+                      <div className="order-card-value">
+                        {formatCurrency(
+                          order.actualReceivedAmount ??
+                          order.totalAmount ??
+                          order.cod ??
+                          0
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {canEdit && !blocked && (
                   <div className="order-card-actions d-flex align-items-center gap-1" onClick={(e) => e.stopPropagation()}>

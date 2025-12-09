@@ -48,10 +48,10 @@ function NotificationBell({ onBellClick }) {
     const eventSource = new EventSource(`${API_BASE_URL}/api/notifications/stream?token=${token}`);
 
     eventSource.onmessage = () => {
-      // Invalidate queries để refetch (list, count, recent)
-      queryClient.invalidateQueries({ queryKey: ['notifications'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'count'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'recent'], exact: false });
+      // Invalidate tất cả queries notifications (list, count, recent)
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'notifications'
+      });
     };
 
     eventSource.onerror = (error) => {

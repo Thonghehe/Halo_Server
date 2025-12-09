@@ -31,12 +31,6 @@ export const useUnreadNotificationsCount = () => {
     queryKey: ['notifications', 'count'],
     queryFn: async () => {
       const response = await api.get('/api/notifications?limit=1&unreadOnly=true');
-      console.info('[Notifications] fetch unread count', {
-        status: response.status,
-        success: response.data?.success,
-        total: response.data?.total,
-        unreadCount: response.data?.unreadCount
-      });
       if (response.data.success) {
         // Prefer unreadCount nếu backend trả về, fallback total
         const unread = Number(response.data.unreadCount);

@@ -427,10 +427,8 @@ function Orders() {
   const userRoles = user?.roles || [];
   const isCatKhung = userRoles.includes('catKhung');
   const isFinance = userRoles.includes('keToanTaiChinh');
-  const isAccountingOps = userRoles.includes('keToanDieuDon');
-  const canViewActualReceived = isFinance || isAccountingOps;
   // Hiển thị cột người tạo cho sale, kế toán điều đơn và kế toán tài chính
-  const showCreatorColumn = userRoles.includes('sale') || isAccountingOps || isFinance;
+  const showCreatorColumn = userRoles.includes('sale') || userRoles.includes('keToanDieuDon') || isFinance;
   const hideCustomerColumn =
     userRoles.includes('in') ||
     userRoles.includes('sanXuat') ||
@@ -688,20 +686,20 @@ function Orders() {
                   <th>Loại</th>
                   <th>Ngày tạo</th>
                   {showCreatorColumn && <th>Người tạo</th>}
-                  {canViewActualReceived && <th>Tiền thực nhận</th>}
+                  {isFinance && <th>Tiền thực nhận</th>}
                   <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {(() => {
-                   const baseColumns = 9; // mã, khách, sđt, trạng thái, in, khung, loại, ngày, thao tác
+                  const baseColumns = 9; // mã, khách, sđt, trạng thái, in, khung, loại, ngày, thao tác
                   const visibleColumnCount =
                     baseColumns -
                     (hideCustomerColumn ? 1 : 0) -
                     (hidePrintingStatusColumn ? 1 : 0) -
                     (hideFrameStatusColumn ? 1 : 0) +
                     (showCreatorColumn ? 1 : 0) +
-                     (canViewActualReceived ? 1 : 0);
+                    (isFinance ? 1 : 0);
                   if (tableLoading) {
                     return (
                       <tr>
@@ -763,7 +761,7 @@ function Orders() {
                           {order.createdBy?.fullName || order.createdBy?.email || '-'}
                         </td>
                       )}
-                      {canViewActualReceived && (
+                      {isFinance && (
                         <td>
                           {formatCurrency(
                             order.actualReceivedAmount ??
@@ -884,13 +882,13 @@ function Orders() {
                       </span>
                     </div>
                   </div>
-                   {showCreatorColumn && (
+                  {showCreatorColumn && (
                     <div className="order-card-field">
                       <div className="order-card-label">Người tạo</div>
                       <div className="order-card-value">{order.createdBy?.fullName || order.createdBy?.email || '-'}</div>
                     </div>
                   )}
-                   {canViewActualReceived && (
+                  {isFinance && (
                     <div className="order-card-field">
                       <div className="order-card-label">Tiền thực nhận</div>
                       <div className="order-card-value">

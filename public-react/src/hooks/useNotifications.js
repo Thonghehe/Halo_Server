@@ -32,11 +32,15 @@ export const useUnreadNotificationsCount = () => {
     queryFn: async () => {
       const response = await api.get('/api/notifications?limit=1&unreadOnly=true');
       if (response.data.success) {
-        return response.data.total || 0;
+        // Prefer unreadCount nếu backend trả về, fallback total
+        const unread = Number(response.data.unreadCount);
+        if (!Number.isNaN(unread)) return unread;
+        const total = Number(response.data.total);
+        if (!Number.isNaN(total)) return total;
       }
       return 0;
     },
-    refetchInterval: 30000, // Refetch mỗi 30 giây
+    refetchInterval: 10000, // Refetch mỗi 10 giây để badge cập nhật nhanh
   });
 };
 

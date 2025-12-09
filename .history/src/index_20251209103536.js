@@ -18,9 +18,27 @@ const app = express();
 // Trust proxy để lấy IP thực của client khi có reverse proxy (Nginx)
 app.set('trust proxy', true);
 
-// CORS configuration - cho phép tất cả origins để test
+// CORS configuration
 const corsOptions = {
-  origin: true, // Cho phép tất cả origins
+  origin: function (origin, callback) {
+    // Cho phép requests không có origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Cho phép tất cả origins trong development, hoặc whitelist trong production
+    const allowedOrigins = [
+      'https://halocrms.io.vn',
+      'https://admin.halocrms.io.vn',
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:5174'
+    ];
+    
+    if (process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -33,13 +51,7 @@ app.use(express.json());
 // Debug middleware để log tất cả requests
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Original: ${req.originalUrl}`);
-    console.log(`  Headers:`, {
-      'content-type': req.headers['content-type'],
-      'origin': req.headers['origin'],
-      'authorization': req.headers['authorization'] ? 'present' : 'missing'
-    });
-    console.log(`  Body:`, req.body);
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Original: ${req.originalUrl} - Query:`, req.query);
   }
   next();
 });

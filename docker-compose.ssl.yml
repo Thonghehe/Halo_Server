@@ -1,0 +1,124 @@
+# Halo - Docker Compose với HTTPS/SSL (Let's Encrypt)
+# Sử dụng Nginx Reverse Proxy với SSL certificates từ Let's Encrypt
+# Production-ready configuration
+
+services:
+  # ==================== NGINX REVERSE PROXY VỚI SSL ====================
+  nginx-ssl:
+    image: nginx:alpine
+    container_name: halo-nginx-ssl
+    ports:
+      - "80:80"     # HTTP (redirect to HTTPS)
+      - "443:443"   # HTTPS
+    volumes:
+      - ./nginx/nginx-ssl.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    networks:
+      - halo-network
+    depends_on:
+      - backend
+      - admin-panel
+      - public
+      - certbot
+    restart: unless-stopped
+
+  # ==================== CERTBOT (Let's Encrypt) ====================
+  certbot:
+    image: certbot/certbot
+    container_name: halo-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - halo-network
+    restart: unless-stopped
+
+  # ==================== BACKEND API ====================
+  backend:
+    build: .
+    container_name: halo-backend
+    # Không expose port ra ngoài - chỉ truy cập qua nginx
+    expose:
+      - "4000"
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=4000
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongo:27017/halo?authSource=admin
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    depends_on:
+      - mongo
+    volumes:
+      # Production: không mount source code (dùng image đã build)
+      # Development: uncomment để hot-reload
+      # - ./src:/usr/src/app/src
+      # - /usr/src/app/node_modules
+      - ./uploads:/usr/src/app/uploads
+    networks:
+      - halo-network
+    restart: unless-stopped
+
+  # ==================== ADMIN PANEL (React) ====================
+  admin-panel:
+    build: 
+      context: ./admin-panel-react
+      dockerfile: Dockerfile
+    container_name: halo-admin-panel
+    # Không expose port ra ngoài - chỉ truy cập qua nginx
+    expose:
+      - "80"
+    env_file: .env
+    environment:
+      - VITE_API_BASE_URL=${API_BASE_URL:-https://api.halocrms.io.vn}
+    networks:
+      - halo-network
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  # ==================== PUBLIC FRONTEND (React) ====================
+  public:
+    build:
+      context: ./public-react
+      dockerfile: Dockerfile
+    container_name: halo-public
+    # Không expose port ra ngoài - chỉ truy cập qua nginx
+    expose:
+      - "80"
+    env_file: .env
+    environment:
+      - VITE_API_BASE_URL=${API_BASE_URL:-https://api.halocrms.io.vn}
+    networks:
+      - halo-network
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  # ==================== MONGODB DATABASE ====================
+  mongo:
+    image: mongo:7.0
+    container_name: halo-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    command: ["mongod", "--bind_ip_all"]
+    environment:
+      - MONGO_INITDB_DATABASE=halo
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - halo-network
+
+volumes:
+  mongo_data:
+    driver: local
+
+networks:
+  halo-network:
+    driver: bridge

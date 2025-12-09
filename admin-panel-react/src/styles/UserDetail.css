@@ -1,0 +1,150 @@
+.user-detail-container {
+  max-width: 1000px;
+}
+
+.user-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-item {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 0;
+  border-left: 3px solid #667eea;
+}
+
+.info-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 1.1rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.roles-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.user-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.user-actions .btn {
+  min-width: 150px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.card-title i {
+  font-size: 1.25rem;
+  color: #667eea;
+}
+
+.user-history-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.user-history-timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: #e2e8f0;
+}
+
+.user-history-item {
+  position: relative;
+  padding-left: 2.25rem;
+}
+
+.user-history-dot {
+  position: absolute;
+  left: -2px;
+  top: 10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 0;
+  background: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+}
+
+.user-history-content {
+  background: #f8fafc;
+  border-radius: 0;
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  padding: 1rem 1.25rem;
+}
+
+.user-history-changes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.user-history-changes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.history-change-field {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.history-change-values i {
+  color: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .user-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-actions {
+    flex-direction: column;
+  }
+  
+  .user-actions .btn {
+    width: 100%;
+  }
+
+  .user-history-timeline::before {
+    left: 6px;
+  }
+
+  .user-history-item {
+    padding-left: 1.85rem;
+  }
+}
+

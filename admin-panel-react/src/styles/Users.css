@@ -1,0 +1,277 @@
+.nav-tabs {
+  border-bottom: 2px solid #dee2e6;
+  margin-bottom: 1.5rem;
+}
+
+.nav-tabs .nav-link {
+  cursor: pointer;
+  border: none;
+  color: #666;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+
+.nav-tabs .nav-link:hover {
+  color: #667eea;
+  border-bottom-color: rgba(102, 126, 234, 0.3);
+}
+
+.nav-tabs .nav-link.active {
+  color: #667eea;
+  border-bottom: 2px solid #667eea;
+  background: transparent;
+  font-weight: 600;
+}
+
+/* Users table */
+.users-table {
+  margin-top: 1rem;
+}
+
+.user-role-badge {
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+  display: inline-block;
+}
+
+.user-status-badge {
+  padding: 0.4em 0.8em;
+  border-radius: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.user-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.user-actions .btn {
+  white-space: nowrap;
+}
+
+/* Pending users alert */
+.pending-alert {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-left: 4px solid #ffc107;
+  padding: 1rem 1.5rem;
+  border-radius: 0;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pending-alert .badge {
+  font-size: 0.875rem;
+  padding: 0.5em 0.75em;
+}
+
+/* User row clickable */
+.user-row {
+  transition: background-color 0.2s ease;
+}
+
+.user-row:hover {
+  background-color: #f0f4ff !important;
+}
+
+.user-row td:first-child {
+  color: #667eea;
+}
+
+.user-row td:first-child strong {
+  font-weight: 600;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  /* Header responsive */
+  .users-header-responsive {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+  
+  /* Tabs responsive */
+  .nav-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .nav-tabs .nav-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Table responsive */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .table th,
+  .table td {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+    white-space: nowrap;
+  }
+  
+  /* Badge responsive */
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.25em 0.5em;
+  }
+  
+  /* Button responsive */
+  .btn-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  /* Card body responsive */
+  .card-body {
+    padding: 1rem;
+  }
+  
+  /* Modal responsive */
+  .order-detail-modal-dialog {
+    max-width: 95% !important;
+    margin: 1rem auto;
+  }
+  
+  .order-detail-modal-content {
+    margin: 0;
+  }
+  
+  .order-detail-modal-body {
+    padding: 1rem;
+  }
+}
+
+/* Tablet responsive */
+@media (max-width: 992px) and (min-width: 769px) {
+  .table th,
+  .table td {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+  
+  .nav-tabs .nav-link {
+    padding: 0.6rem 1.2rem;
+  }
+}
+
+/* Mobile card view for users */
+@media (max-width: 576px) {
+  .user-card-mobile {
+    display: block;
+  }
+  
+  .user-table-desktop {
+    display: none;
+  }
+  
+  .user-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .user-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .user-card-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #667eea;
+  }
+  
+  .user-card-status {
+    font-size: 0.85rem;
+  }
+  
+  .user-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .user-card-field {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .user-card-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+  
+  .user-card-value {
+    font-size: 0.9rem;
+    color: #212529;
+  }
+  
+  .user-card-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .user-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #dee2e6;
+  }
+  
+  .user-card-actions .btn {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+@media (min-width: 577px) {
+  .user-card-mobile {
+    display: none;
+  }
+  
+  .user-table-desktop {
+    display: block;
+  }
+}
+

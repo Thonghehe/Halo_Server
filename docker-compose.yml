@@ -1,0 +1,88 @@
+# Halo - Complete Docker Compose
+# Bao gồm: Backend API + Admin Panel + MongoDB
+# Hỗ trợ cả development và production
+
+version: '3.9'
+
+services:
+  # ==================== BACKEND API ====================
+  backend:
+    build: .
+    container_name: halo-backend
+    ports:
+      - "4000:4000"
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=4000
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongo:27017/halo?authSource=admin
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    depends_on:
+      - mongo
+    volumes:
+      # Development: Hot-reload
+      - ./src:/usr/src/app/src
+      - /usr/src/app/node_modules
+      # Uploads
+      - ./uploads:/usr/src/app/uploads
+    networks:
+      - halo-network
+    restart: unless-stopped
+
+  # ==================== ADMIN PANEL (React) ====================
+  admin-panel:
+    build: 
+      context: ./admin-panel-react
+      dockerfile: Dockerfile
+    container_name: halo-admin-panel
+    ports:
+      - "3001:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:4000
+    networks:
+      - halo-network
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  # ==================== PUBLIC FRONTEND (React) ====================
+  public:
+    build:
+      context: ./public-react
+      dockerfile: Dockerfile
+    container_name: halo-public
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:4000
+    networks:
+      - halo-network
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  # ==================== MONGODB DATABASE ====================
+  mongo:
+    image: mongo:7.0
+    container_name: halo-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    command: ["mongod", "--bind_ip_all"]
+    environment:
+      - MONGO_INITDB_DATABASE=halo
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - halo-network
+
+volumes:
+  mongo_data:
+    driver: local
+
+networks:
+  halo-network:
+    driver: bridge

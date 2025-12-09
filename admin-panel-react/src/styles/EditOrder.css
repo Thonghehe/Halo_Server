@@ -1,0 +1,240 @@
+/* Edit Order specific styles */
+.order-detail-container {
+  max-width: 1000px;
+}
+
+.order-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.info-item {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 0;
+  border-left: 3px solid #667eea;
+}
+
+.info-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 1.1rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.order-status-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.order-amount-display {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #667eea;
+}
+
+/* Drop zone styling (match CreateOrder) */
+.drop-zone {
+  border: 2px dashed #ced4da;
+  border-radius: 0;
+  padding: 12px;
+  background: #fafafa;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.drop-zone.drag-over,
+.drop-zone:focus-within {
+  background-color: #eef7ff;
+  border-color: #0d6efd;
+}
+
+/* Image thumbnails */
+.img-thumbnail {
+  object-fit: cover;
+}
+
+/* Mention dropdown styles */
+.mention-input-wrapper {
+  position: relative;
+}
+
+.mention-suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-top: none;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.mention-suggestion-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  color: #212529;
+  cursor: pointer;
+}
+
+.mention-suggestion-item:hover,
+.mention-suggestion-item.active {
+  background-color: #e9f2ff;
+}
+
+.mention-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background-color: rgba(13, 110, 253, 0.12);
+  color: #0b5ed7;
+  border: 1px solid rgba(13, 110, 253, 0.25);
+}
+
+.mention-tag-badge i {
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+/* Tablet */
+@media (min-width: 769px) and (max-width: 991px) {
+  .order-detail-container {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+  
+  .order-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    display: grid !important;
+  }
+  
+  .info-item {
+    padding: 0.875rem;
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  .info-label,
+  .info-value {
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  .info-value {
+    font-size: 1rem;
+  }
+  
+  /* Form adjustments */
+  .card-body {
+    padding: 1.25rem;
+  }
+  
+  /* Ensure all form fields are visible */
+  .form-group {
+    display: block !important;
+    visibility: visible !important;
+    margin-bottom: 1.25rem;
+  }
+
+  .form-label {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .form-control,
+  .form-select {
+    display: block !important;
+    visibility: visible !important;
+    width: 100%;
+  }
+  
+  /* Painting items - 2 columns */
+  .painting-item {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .painting-item .col-md-6 {
+    width: 50%;
+    display: block !important;
+  }
+  
+  .painting-item .col-md-3 {
+    width: 50%;
+    display: block !important;
+  }
+  
+  /* Form actions - ensure all buttons visible */
+  .form-actions {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    display: flex !important;
+  }
+  
+  .form-actions .btn {
+    min-width: 140px;
+    display: inline-flex !important;
+    visibility: visible !important;
+    white-space: nowrap;
+  }
+
+  /* Ensure all rows and columns are visible */
+  .row {
+    display: flex !important;
+    flex-wrap: wrap;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
+
+  .row > * {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  /* Badges and tags */
+  .badge,
+  .mention-tag-badge {
+    display: inline-flex !important;
+    visibility: visible !important;
+    white-space: nowrap;
+  }
+
+  /* Buttons in painting items */
+  .painting-item .btn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    white-space: nowrap;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .order-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

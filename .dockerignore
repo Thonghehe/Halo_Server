@@ -1,0 +1,111 @@
+target/
+!target/*.jar
+.git
+.gitignore
+.mvn
+*.md
+*.log
+.idea
+.vscode
+*.iml
+node_modules
+npm-debug.log
+.env
+.env.local
+uploads/*
+!uploads/.gitkeep
+
+# Node.js
+node_modules          # Dependencies (sẽ install lại trong container)
+npm-debug.log         # Debug logs
+# Bỏ qua lock file cũ
+package-lock.json     # Đã có trong image
+
+# Environment files
+.env                  # Sensitive data
+.env.local
+.env.production
+.env.*.local
+
+# Git
+.git                  # Version control history
+.gitignore
+
+# IDE
+.idea                 # IntelliJ IDEA
+.vscode               # VS Code
+*.iml
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store             # macOS
+Thumbs.db             # Windows
+
+# Uploads (sẽ mount từ volume)
+uploads/*
+!uploads/.gitkeep     # Giữ lại file placeholder
+
+# Documentation
+*.md
+README.md
+docs/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Build artifacts
+dist/
+build/
+
+# Node modules
+node_modules
+
+# Uploads (sẽ mount từ host)
+uploads
+
+# IDE/Editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# KHÔNG ĐƯỢC IGNORE admin-panel (đã bỏ dòng này nếu có)
+# admin-panel  ← XÓA DÒNG NÀY NẾU CÓ
+
+# Documentation
+*.md
+README.md
+
+# Logs
+*.log
+logs
+
+# Docker Compose files
+docker-compose*.yml
+
+# Environment files
+.env*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp
+temp
+
+# Test files
+test
+tests
+__tests__
+
+# Coverage reports
+coverage
+
+# Build artifacts
+dist
+build

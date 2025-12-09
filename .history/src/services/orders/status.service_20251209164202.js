@@ -371,13 +371,7 @@ export const acceptOrder = async (orderId, payload = {}, currentUser) => {
 
 export const completeOrder = async (orderId, payload = {}, currentUser) => {
   try {
-    const {
-      role,
-      shippingMethod,
-      shippingTrackingCode,
-      paymentBillImages,
-      actualReceivedAmount
-    } = payload;
+    const { role, shippingMethod, shippingTrackingCode, paymentBillImages } = payload;
     const user = currentUser;
 
     const order = await Order.findById(orderId);

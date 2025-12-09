@@ -55,6 +55,17 @@ app.get('/api', (req, res) => {
   });
 });
 
+// Test route để kiểm tra routing
+app.all('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Test route works!',
+    method: req.method,
+    path: req.path,
+    originalUrl: req.originalUrl
+  });
+});
+
 // API Routes (upload route phải được đăng ký trước để handle GET requests)
 app.use('/api/auth', authRoute);
 app.use('/api/admin', adminRoute);

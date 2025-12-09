@@ -50,23 +50,19 @@ export const loginUser = async (payload = {}, req) => {
   try {
     const { email, password, deviceName, deviceType } = payload;
 
-    console.log('[Login] Attempting login for:', email);
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
-      console.log('[Login] User not found:', email);
       return buildServiceResponse(401, {
         success: false,
         message: 'Email hoặc mật khẩu không đúng'
       });
     }
 
-    console.log('[Login] User found - active:', user.active, 'email:', user.email);
     if (!user.active) {
-      console.log('[Login] User account not active - returning 403');
       return buildServiceResponse(403, {
         success: false,
-        message: 'Tài khoản của bạn đang chờ admin phê duyệt. Vui lòng quay lại sau.'
+        message: 'Tài khoản của bạn chưa được kích hoạt. Vui lòng liên hệ admin để được phê duyệt.'
       });
     }
 

@@ -13,27 +13,21 @@ export const authenticate = async (req, res, next) => {
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.split(' ')[1];
-      console.log('[Auth] Authorization Header: exists');
     } else if (queryToken) {
       token = queryToken;
-      console.log('[Auth] Token received via query param');
     } else if (headerToken) {
       token = headerToken;
-      console.log('[Auth] Token received via x-access-token header');
     }
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Không có token xác thực'
+        message: 'Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.'
       });
     }
 
-    console.log('[Auth] Token received:', token.substring(0, 30) + '...');
-
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('[Auth] Decoded token:', decoded);
 
     let sessionTokenDoc = null;
     if (decoded?.sessionId) {
@@ -43,7 +37,6 @@ export const authenticate = async (req, res, next) => {
         sessionTokenDoc.revokedAt ||
         sessionTokenDoc.user.toString() !== decoded.userId
       ) {
-        console.warn('[Auth] Session token invalid or revoked');
         return res.status(401).json({
           success: false,
           message: 'Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.'
@@ -51,7 +44,6 @@ export const authenticate = async (req, res, next) => {
       }
 
       if (sessionTokenDoc.expiresAt && sessionTokenDoc.expiresAt.getTime() < Date.now()) {
-        console.warn('[Auth] Session token expired via TTL');
         return res.status(401).json({
           success: false,
           message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
@@ -68,37 +60,33 @@ export const authenticate = async (req, res, next) => {
       });
     
     if (!user) {
-      console.warn('[Auth] User not found with ID:', decoded.userId);
       return res.status(401).json({
         success: false,
-        message: 'User không tồn tại'
+        message: 'Tài khoản không tồn tại hoặc đã bị xóa.'
       });
     }
 
-    console.log('[Auth] User authenticated:', user.email);
     req.user = user;
     req.sessionToken = sessionTokenDoc;
     next();
   } catch (error) {
-    console.error('[Auth] Error:', error.message);
-    
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
-        message: 'Token không hợp lệ'
+        message: 'Token xác thực không hợp lệ. Vui lòng đăng nhập lại.'
       });
     }
     
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
-        message: 'Token đã hết hạn'
+        message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
       });
     }
 
     res.status(401).json({
       success: false,
-      message: 'Lỗi xác thực'
+      message: 'Lỗi xác thực. Vui lòng đăng nhập lại.'
     });
   }
 };
@@ -109,16 +97,25 @@ export const authorize = (...roles) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Chưa xác thực'
+        message: 'Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.'
       });
     }
 
     const hasRole = roles.some(role => req.user.roles.includes(role));
 
     if (!hasRole) {
+      const roleNames = roles.map(role => {
+        const roleMap = {
+          'admin': 'Quản trị viên',
+          'sale': 'Nhân viên bán hàng',
+          'manager': 'Quản lý'
+        };
+        return roleMap[role] || role;
+      });
+      
       return res.status(403).json({
         success: false,
-        message: 'Không có quyền truy cập. Yêu cầu role: ' + roles.join(', ')
+        message: `Bạn không có quyền truy cập chức năng này. Yêu cầu quyền: ${roleNames.join(', ')}.`
       });
     }
 

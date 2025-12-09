@@ -163,6 +163,18 @@ function Orders() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortOrder, frameSizeSort]);
 
+  // Log kiểm tra tiền thực nhận cho vai trò kế toán (tài chính / điều đơn)
+  useEffect(() => {
+    if (!canViewActualReceived) return;
+    if (!orders || orders.length === 0) return;
+    const sample = orders.slice(0, 5).map((o) => ({
+      orderCode: o.orderCode,
+      actualReceivedAmount: o.actualReceivedAmount,
+      totalAmount: o.totalAmount,
+      cod: o.cod
+    }));
+    console.info('[Orders][ActualReceived] sample (tối đa 5 đơn):', sample);
+  }, [orders, canViewActualReceived]);
 
   const triggerRealtimeRefresh = useCallback(() => {
     if (refreshTimeoutRef.current) return;

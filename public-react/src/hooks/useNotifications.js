@@ -27,7 +27,8 @@ export const useNotifications = (filters = {}) => {
 // Hook để lấy unread notifications count
 export const useUnreadNotificationsCount = () => {
   return useQuery({
-    queryKey: [...queryKeys.notifications(), 'count'],
+    // Key tách biệt, không kèm object để tránh cache key đổi
+    queryKey: ['notifications', 'count'],
     queryFn: async () => {
       const response = await api.get('/api/notifications?limit=1&unreadOnly=true');
       if (response.data.success) {
@@ -42,7 +43,8 @@ export const useUnreadNotificationsCount = () => {
 // Hook để lấy recent notifications (cho bell)
 export const useRecentNotifications = (limit = 10) => {
   return useQuery({
-    queryKey: [...queryKeys.notifications(), 'recent', limit],
+    // Key tách biệt, không kèm object để tránh bị thay đổi reference
+    queryKey: ['notifications', 'recent', limit],
     queryFn: async () => {
       const response = await api.get(`/api/notifications?limit=${limit}`);
       if (response.data.success) {

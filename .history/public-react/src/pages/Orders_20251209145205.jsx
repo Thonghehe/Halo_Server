@@ -458,10 +458,24 @@ function Orders() {
     setShowModal(true);
   };
 
-  const handleFinanceConfirm = async (orderId) => {
+  const handleFinanceConfirm = async (order) => {
+    const orderId = order._id || order.id;
+    // Prompt số tiền thực nhận, mặc định theo giá trị đã lưu hoặc tổng tiền/COD
+    const defaultAmount = order.actualReceivedAmount ?? order.totalAmount ?? order.cod ?? 0;
+    const input = window.prompt('Nhập tiền thực nhận (VND):', defaultAmount);
+    if (input === null) return; // user cancel
+    const parsed = Number(String(input).replace(/\D/g, ''));
+    if (Number.isNaN(parsed)) {
+      alert('Số tiền không hợp lệ');
+      return;
+    }
+
     setConfirmingId(orderId);
     try {
-      const res = await api.patch(`/api/orders/${orderId}/complete`, { role: 'keToanTaiChinh' });
+      const res = await api.patch(`/api/orders/${orderId}/complete`, {
+        role: 'keToanTaiChinh',
+        actualReceivedAmount: parsed
+      });
       if (res.data?.success) {
         queryClient.invalidateQueries({ queryKey: ['orders'] });
       }
@@ -759,16 +773,7 @@ function Orders() {
                           {order.createdBy?.fullName || order.createdBy?.email || '-'}
                         </td>
                       )}
-                      {isFinance && (
-                        <td>
-                          {formatCurrency(
-                            order.actualReceivedAmount ??
-                            order.totalAmount ??
-                            order.cod ??
-                            0
-                          )}
-                        </td>
-                      )}
+                      {isFinance && <td>{formatCurrency(order.actualReceivedAmount)}</td>}
                       <td onClick={(e) => e.stopPropagation()}>
                         {(() => {
                           const canEdit = userRoles.includes('admin') || userRoles.includes('sale');
@@ -800,7 +805,7 @@ function Orders() {
                                 className="btn btn-sm btn-success"
                                 onClick={(evt) => {
                                   evt.stopPropagation();
-                                  handleFinanceConfirm(order._id || order.id);
+                                  handleFinanceConfirm(order);
                                 }}
                                 disabled={confirmingId === (order._id || order.id)}
                               >
@@ -884,19 +889,6 @@ function Orders() {
                     <div className="order-card-field">
                       <div className="order-card-label">Người tạo</div>
                       <div className="order-card-value">{order.createdBy?.fullName || order.createdBy?.email || '-'}</div>
-                    </div>
-                  )}
-                  {isFinance && (
-                    <div className="order-card-field">
-                      <div className="order-card-label">Tiền thực nhận</div>
-                      <div className="order-card-value">
-                        {formatCurrency(
-                          order.actualReceivedAmount ??
-                          order.totalAmount ??
-                          order.cod ??
-                          0
-                        )}
-                      </div>
                     </div>
                   )}
                 </div>

@@ -759,16 +759,7 @@ function Orders() {
                           {order.createdBy?.fullName || order.createdBy?.email || '-'}
                         </td>
                       )}
-                      {isFinance && (
-                        <td>
-                          {formatCurrency(
-                            order.actualReceivedAmount ??
-                            order.totalAmount ??
-                            order.cod ??
-                            0
-                          )}
-                        </td>
-                      )}
+                      {isFinance && <td>{formatCurrency(order.actualReceivedAmount)}</td>}
                       <td onClick={(e) => e.stopPropagation()}>
                         {(() => {
                           const canEdit = userRoles.includes('admin') || userRoles.includes('sale');
@@ -884,19 +875,6 @@ function Orders() {
                     <div className="order-card-field">
                       <div className="order-card-label">Người tạo</div>
                       <div className="order-card-value">{order.createdBy?.fullName || order.createdBy?.email || '-'}</div>
-                    </div>
-                  )}
-                  {isFinance && (
-                    <div className="order-card-field">
-                      <div className="order-card-label">Tiền thực nhận</div>
-                      <div className="order-card-value">
-                        {formatCurrency(
-                          order.actualReceivedAmount ??
-                          order.totalAmount ??
-                          order.cod ??
-                          0
-                        )}
-                      </div>
                     </div>
                   )}
                 </div>

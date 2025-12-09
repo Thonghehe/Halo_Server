@@ -886,19 +886,6 @@ function Orders() {
                       <div className="order-card-value">{order.createdBy?.fullName || order.createdBy?.email || '-'}</div>
                     </div>
                   )}
-                  {isFinance && (
-                    <div className="order-card-field">
-                      <div className="order-card-label">Tiền thực nhận</div>
-                      <div className="order-card-value">
-                        {formatCurrency(
-                          order.actualReceivedAmount ??
-                          order.totalAmount ??
-                          order.cod ??
-                          0
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
                 {canEdit && !blocked && (
                   <div className="order-card-actions d-flex align-items-center gap-1" onClick={(e) => e.stopPropagation()}>

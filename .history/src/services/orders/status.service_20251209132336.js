@@ -683,10 +683,10 @@ export const receiveOrder = async (orderId, payload = {}, currentUser) => {
       });
     }
 
-    if (type !== 'tranh') {
+    if (type !== 'tranh' && type !== 'khung') {
       return buildServiceResponse(400, {
         success: false,
-        message: 'Type không hợp lệ. Chỉ chấp nhận "tranh"'
+        message: 'Type không hợp lệ. Chỉ chấp nhận "tranh" hoặc "khung"'
       });
     }
 
@@ -698,7 +698,7 @@ export const receiveOrder = async (orderId, payload = {}, currentUser) => {
     if (!isSanXuat && !isDongGoi) {
       return buildServiceResponse(403, {
         success: false,
-        message: 'Bạn không có quyền nhận tranh'
+        message: 'Bạn không có quyền nhận tranh/khung'
       });
     }
 
@@ -723,11 +723,36 @@ export const receiveOrder = async (orderId, payload = {}, currentUser) => {
         order.printingStatus = 'san_xuat_da_nhan_tranh';
         statusNote = `${displayName} (Sản xuất) đã nhận tranh`;
         await order.addStatusHistory(order.status, user._id, statusNote);
+        
+        // Tự động đánh dấu "đã vào khung" khi sản xuất nhận tranh (bỏ qua bước cắt khung)
+        if (order.canTransitionTo('da_vao_khung')) {
+          order.status = 'da_vao_khung';
+          await order.addStatusHistory('da_vao_khung', user._id, 'Sản xuất đã nhận tranh, tự động đánh dấu đã vào khung');
+        }
       } else {
         return buildServiceResponse(400, {
           success: false,
           message: 'Không thể nhận tranh trong trạng thái hiện tại'
         });
+      }
+    } else if (type === 'khung') {
+      // Chỉ sản xuất mới có thể nhận khung
+      if (!isSanXuat) {
+        return buildServiceResponse(403, {
+          success: false,
+          message: 'Chỉ sản xuất mới có thể nhận khung'
+        });
+      }
+
+      // Tạm thời bỏ kiểm tra "đã cắt khung" - cho phép nhận khung trực tiếp
+      order.frameCuttingStatus = 'san_xuat_da_nhan_khung';
+      statusNote = `${displayName} đã nhận khung`;
+      await order.addStatusHistory(order.status, user._id, statusNote);
+      
+      // Nếu đã nhận cả tranh và khung, tự động đánh dấu "đã vào khung"
+      if (order.printingStatus === 'san_xuat_da_nhan_tranh' && order.canTransitionTo('da_vao_khung')) {
+        order.status = 'da_vao_khung';
+        await order.addStatusHistory('da_vao_khung', user._id, 'Sản xuất đã nhận cả tranh và khung, tự động đánh dấu đã vào khung');
       }
     }
 
@@ -737,7 +762,7 @@ export const receiveOrder = async (orderId, payload = {}, currentUser) => {
 
     return buildServiceResponse(200, {
       success: true,
-      message: 'Nhận tranh thành công',
+      message: `Nhận ${type === 'tranh' ? 'tranh' : 'khung'} thành công`,
       data: order
     });
   } catch (error) {

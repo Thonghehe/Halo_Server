@@ -759,7 +759,9 @@ function Orders() {
                           {order.createdBy?.fullName || order.createdBy?.email || '-'}
                         </td>
                       )}
-                      {isFinance && <td>{formatCurrency(order.actualReceivedAmount)}</td>}
+                      {isFinance && (
+                        <td>{formatCurrency(order.actualReceivedAmount)}</td>
+                      )}
                       <td onClick={(e) => e.stopPropagation()}>
                         {(() => {
                           const canEdit = userRoles.includes('admin') || userRoles.includes('sale');

@@ -698,7 +698,7 @@ export const receiveOrder = async (orderId, payload = {}, currentUser) => {
     if (!isSanXuat && !isDongGoi) {
       return buildServiceResponse(403, {
         success: false,
-        message: 'Bạn không có quyền nhận tranh'
+        message: 'Bạn không có quyền nhận tranh/khung'
       });
     }
 
@@ -729,7 +729,7 @@ export const receiveOrder = async (orderId, payload = {}, currentUser) => {
           message: 'Không thể nhận tranh trong trạng thái hiện tại'
         });
       }
-    }
+    // Bỏ phần nhận khung - không cần nhận khung nữa
 
     await order.save();
 

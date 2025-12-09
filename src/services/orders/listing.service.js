@@ -107,6 +107,8 @@ export const getOrders = async (query = {}) => {
         { customerPhone: regex },
         { customerAddress: regex },
         { note: regex },
+        { shippingTrackingCode: regex },
+        { shippingExternalInfo: regex },
         { _id: { $in: paintingOrderIds } }
       ];
     }

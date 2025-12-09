@@ -698,7 +698,7 @@ export const receiveOrder = async (orderId, payload = {}, currentUser) => {
     if (!isSanXuat && !isDongGoi) {
       return buildServiceResponse(403, {
         success: false,
-        message: 'Bạn không có quyền nhận tranh'
+        message: 'Bạn không có quyền nhận tranh/khung'
       });
     }
 
@@ -729,6 +729,19 @@ export const receiveOrder = async (orderId, payload = {}, currentUser) => {
           message: 'Không thể nhận tranh trong trạng thái hiện tại'
         });
       }
+    } else if (type === 'khung') {
+      // Chỉ sản xuất mới có thể nhận khung
+      if (!isSanXuat) {
+        return buildServiceResponse(403, {
+          success: false,
+          message: 'Chỉ sản xuất mới có thể nhận khung'
+        });
+      }
+
+      // Tạm thời bỏ kiểm tra "đã cắt khung" - cho phép nhận khung trực tiếp
+      order.frameCuttingStatus = 'san_xuat_da_nhan_khung';
+      statusNote = `${displayName} đã nhận khung`;
+      await order.addStatusHistory(order.status, user._id, statusNote);
     }
 
     await order.save();
@@ -737,7 +750,7 @@ export const receiveOrder = async (orderId, payload = {}, currentUser) => {
 
     return buildServiceResponse(200, {
       success: true,
-      message: 'Nhận tranh thành công',
+      message: `Nhận ${type === 'tranh' ? 'tranh' : 'khung'} thành công`,
       data: order
     });
   } catch (error) {

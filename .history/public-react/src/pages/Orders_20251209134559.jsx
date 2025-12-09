@@ -690,7 +690,7 @@ function Orders() {
               </thead>
               <tbody>
                 {(() => {
-                  const baseColumns = 9; // mã, khách, sđt, trạng thái, in, khung, loại, ngày, thao tác
+                  const baseColumns = 10;
                   const visibleColumnCount =
                     baseColumns -
                     (hideCustomerColumn ? 1 : 0) -
@@ -759,12 +759,10 @@ function Orders() {
                           {order.createdBy?.fullName || order.createdBy?.email || '-'}
                         </td>
                       )}
-                      {isFinance && <td>{formatCurrency(order.actualReceivedAmount)}</td>}
                       <td onClick={(e) => e.stopPropagation()}>
                         {(() => {
                           const canEdit = userRoles.includes('admin') || userRoles.includes('sale');
                           const blocked = ['huy', 'da_gui_di', 'hoan_thanh', 'cat_vao_kho'].includes(order.status);
-                          const canFinanceConfirm = isFinance && order.status === 'da_gui_di';
                           const showPendingDraftIndicator = order.hasPendingMoneyDraft;
                           if (canEdit && !blocked) {
                             return (
@@ -783,20 +781,6 @@ function Orders() {
                                   ></i>
                                 )}
                               </div>
-                            );
-                          }
-                          if (canFinanceConfirm) {
-                            return (
-                              <button
-                                className="btn btn-sm btn-success"
-                                onClick={(evt) => {
-                                  evt.stopPropagation();
-                                  handleFinanceConfirm(order._id || order.id);
-                                }}
-                                disabled={confirmingId === (order._id || order.id)}
-                              >
-                                {confirmingId === (order._id || order.id) ? 'Đang xác nhận...' : 'Xác nhận'}
-                              </button>
                             );
                           }
                           return null;

@@ -698,7 +698,7 @@ export const receiveOrder = async (orderId, payload = {}, currentUser) => {
     if (!isSanXuat && !isDongGoi) {
       return buildServiceResponse(403, {
         success: false,
-        message: 'Bạn không có quyền nhận tranh'
+        message: 'Bạn không có quyền nhận tranh/khung'
       });
     }
 

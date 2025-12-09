@@ -27,11 +27,15 @@ export const useNotifications = (filters = {}) => {
 // Hook để lấy unread notifications count
 export const useUnreadNotificationsCount = () => {
   return useQuery({
-    queryKey: [...queryKeys.notifications(), 'count'],
+    // Key cố định, không kèm object filters
+    queryKey: ['notifications', 'count'],
     queryFn: async () => {
       const response = await api.get('/api/notifications?limit=1&unreadOnly=true');
       if (response.data.success) {
-        return response.data.total || 0;
+        const unread = Number(response.data.unreadCount);
+        if (!Number.isNaN(unread)) return unread;
+        const total = Number(response.data.total);
+        if (!Number.isNaN(total)) return total;
       }
       return 0;
     },
@@ -42,7 +46,8 @@ export const useUnreadNotificationsCount = () => {
 // Hook để lấy recent notifications (cho bell)
 export const useRecentNotifications = (limit = 10) => {
   return useQuery({
-    queryKey: [...queryKeys.notifications(), 'recent', limit],
+    // Key cố định, không kèm object filters
+    queryKey: ['notifications', 'recent', limit],
     queryFn: async () => {
       const response = await api.get(`/api/notifications?limit=${limit}`);
       if (response.data.success) {
@@ -67,10 +72,10 @@ export const useMarkNotificationRead = () => {
       throw new Error(response.data.message || 'Failed to mark notification as read');
     },
     onSuccess: () => {
-      // Invalidate notifications list, count và recent
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications(), exact: false });
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.notifications(), 'count'], exact: false });
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.notifications(), 'recent'], exact: false });
+      // Invalidate tất cả queries notifications (list, count, recent)
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'notifications'
+      });
     },
   });
 };
@@ -88,10 +93,10 @@ export const useMarkAllNotificationsRead = () => {
       throw new Error(response.data.message || 'Failed to mark all notifications as read');
     },
     onSuccess: () => {
-      // Invalidate notifications list, count và recent
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications(), exact: false });
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.notifications(), 'count'], exact: false });
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.notifications(), 'recent'], exact: false });
+      // Invalidate tất cả queries notifications (list, count, recent)
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'notifications'
+      });
     },
   });
 };

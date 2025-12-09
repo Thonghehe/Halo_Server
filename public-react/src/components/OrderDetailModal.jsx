@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Mosaic } from 'react-loading-indicators';
 import api from '../utils/api';
@@ -109,6 +109,24 @@ function OrderDetailModal({ orderId, show, onClose, onOrderUpdated }) {
   
   const { formatCurrency, getImageUrl, formatDateTime, getVnStatusName, getStatusBadgeClass, getProfitSharingUserName, isImageFile, getFileIcon, getFileColor } = orderUtils;
 
+  const calculateActualReceived = useCallback((inputOrder) => {
+    if (!inputOrder) return 0;
+    if (typeof inputOrder.actualReceivedAmount === 'number' && inputOrder.actualReceivedAmount > 0) {
+      return inputOrder.actualReceivedAmount;
+    }
+    const totalAmount = Number(inputOrder.totalAmount || 0);
+    const depositAmount = Number(inputOrder.depositAmount || 0);
+    const cod = typeof inputOrder.cod === 'number'
+      ? inputOrder.cod
+      : Math.max(totalAmount - depositAmount, 0);
+    const shippingInstallationPrice = Number(inputOrder.shippingInstallationPrice || 0);
+    const customerPaysShipping = inputOrder.customerPaysShipping !== false; // mặc định true
+    if (!customerPaysShipping && shippingInstallationPrice > 0) {
+      return Math.max(0, cod - shippingInstallationPrice);
+    }
+    return cod;
+  }, []);
+
   const handleClickAccept = (role) => {
     const roleNames = {
       'in': 'In',
@@ -209,7 +227,12 @@ function OrderDetailModal({ orderId, show, onClose, onOrderUpdated }) {
       message: `Bạn có chắc chắn đơn hàng này đã  "${roleLabels[role] || 'hoàn thành'}" ?`,
       onConfirm: async () => {
         try {
-          await completeOrder(role, null, showNotification);
+          const baseOrder = displayOrder || order;
+          const completionPayload =
+            role === 'keToanTaiChinh'
+              ? { actualReceivedAmount: calculateActualReceived(baseOrder) }
+              : null;
+          await completeOrder(role, completionPayload, showNotification);
         } catch (err) {
           showNotification(err.response?.data?.message || 'Thao tác thất bại', 'Lỗi');
         }

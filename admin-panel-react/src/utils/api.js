@@ -46,7 +46,34 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Trích xuất message từ backend response
+    const backendMessage = error.response?.data?.message;
+    const statusCode = error.response?.status;
+    
+    // Format lại error để hiển thị message tiếng Việt
+    if (backendMessage) {
+      error.message = backendMessage;
+    } else {
+      // Fallback messages nếu không có message từ backend
+      switch (statusCode) {
+        case 401:
+          error.message = 'Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.';
+          break;
+        case 403:
+          error.message = 'Bạn không có quyền truy cập chức năng này.';
+          break;
+        case 404:
+          error.message = 'Không tìm thấy tài nguyên.';
+          break;
+        case 500:
+          error.message = 'Lỗi máy chủ. Vui lòng thử lại sau.';
+          break;
+        default:
+          error.message = 'Đã xảy ra lỗi. Vui lòng thử lại.';
+      }
+    }
+    
+    if (statusCode === 401) {
       const reqUrl = error.config?.url || '';
       // Không redirect khi đang gọi login hoặc đang ở trang login
       if (reqUrl.includes('/api/auth/login')) {

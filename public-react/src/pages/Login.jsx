@@ -40,7 +40,8 @@ function Login() {
         setError(result.message || 'Đăng nhập thất bại');
       }
     } catch (err) {
-      setError('Đã xảy ra lỗi. Vui lòng thử lại.');
+      // Hiển thị message từ backend hoặc message đã được format trong interceptor
+      setError(err.message || 'Đã xảy ra lỗi. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }

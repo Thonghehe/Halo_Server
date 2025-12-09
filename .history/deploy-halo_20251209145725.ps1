@@ -19,10 +19,17 @@ $serverUser = "halo"
 $serverHost = "171.244.65.176"
 $serverPath = "/var/www/halo/Halo_BE"
 
-# Lệnh chạy trên server (đặt trên 1 dòng để tránh lỗi bash)
-$remoteCmd = "cd $serverPath && git pull origin $branch && docker compose -f docker-compose.ssl.yml stop admin-panel public && docker compose -f docker-compose.ssl.yml build --no-cache admin-panel public && docker compose -f docker-compose.ssl.yml up -d admin-panel public && docker exec halo-nginx-ssl nginx -s reload"
+# Lệnh chạy trên server
+$remoteCmd = @"
+cd $serverPath \
+&& git pull origin $branch \
+&& docker compose -f docker-compose.ssl.yml stop admin-panel public \
+&& docker compose -f docker-compose.ssl.yml build --no-cache admin-panel public \
+&& docker compose -f docker-compose.ssl.yml up -d admin-panel public \
+&& docker exec halo-nginx-ssl nginx -s reload
+"@
 
 # SSH
-ssh "$serverUser@$serverHost" "$remoteCmd"
+ssh "$serverUser@$serverHost" $remoteCmd
 
 Write-Host "`n=== Deploy done! ===" -ForegroundColor Green

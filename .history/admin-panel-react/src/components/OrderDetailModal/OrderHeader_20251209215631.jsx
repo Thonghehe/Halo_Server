@@ -43,14 +43,6 @@ export default function OrderHeader({ order, shouldHideMoneyFields }) {
             {getVnPrintingStatusName(order.printingStatus || 'chua_in')}
           </span>
         </div>
-        {/*
-        <div className="mb-2">
-          <strong>Cắt khung:</strong>{' '}
-          <span className={`badge ${getFrameCuttingStatusBadgeClass(order.frameCuttingStatus || 'chua_cat')}`}>
-            {getVnFrameCuttingStatusName(order.frameCuttingStatus || 'chua_cat')}
-          </span>
-        </div>
-        */}
         {!shouldHideMoneyFields && (
           <>
             <div className="mb-2">

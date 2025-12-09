@@ -21,7 +21,12 @@ export const getOrders = async (query = {}) => {
     } = query;
 
     const filter = {};
-    if (status) filter.status = status;
+    if (status === 'chua_hoan_thanh') {
+      // Gom tất cả trạng thái trừ Hoàn thành và Hủy
+      filter.status = { $nin: ['hoan_thanh', 'huy'] };
+    } else if (status) {
+      filter.status = status;
+    }
     if (orderType) filter.orderType = orderType;
     if (printingStatus) {
       if (printingStatus.includes(',')) {

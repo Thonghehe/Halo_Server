@@ -601,24 +601,6 @@ function Orders() {
               </select>
             </div>
             {/* Ẩn bộ lọc trạng thái khung vì hiện không sử dụng */}
-            {/*
-            <div className="col-12 col-md-2">
-              <label className="form-label">Trạng thái khung</label>
-              <select
-                className="form-select"
-                value={pendingQuery.frameCuttingStatus}
-                onChange={(e) => setPendingQuery({ ...pendingQuery, frameCuttingStatus: e.target.value })}
-              >
-                <option value="">Tất cả</option>
-                <option value="chua_cat,cho_cat_lai_khung">Chưa cắt / Chờ cắt lại</option>
-                <option value="cho_cat_khung">Chờ cắt khung</option>
-                <option value="dang_cat_khung">Đang cắt khung</option>
-                <option value="da_cat_khung">Đã cắt khung</option>
-                <option value="yeu_cau_cat_lai">Yêu cầu cắt lại</option>
-                <option value="khong_cat_khung">Không cắt khung</option>
-              </select>
-            </div>
-            */}
           </div>
           <div className="row g-3 mt-2">
             {!isCatKhung && (

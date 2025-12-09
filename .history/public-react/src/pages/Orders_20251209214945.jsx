@@ -459,13 +459,11 @@ function Orders() {
     userRoles.includes('dongGoi') ||
     userRoles.includes('keToanDieuDon') ||
     isFinance;
-  // Ẩn cột trạng thái khung vì hiện không sử dụng
-  // const hideFrameStatusColumn =
-  //   userRoles.includes('in') ||
-  //   userRoles.includes('dongGoi') ||
-  //   userRoles.includes('keToanDieuDon') ||
-  //   isFinance;
-  const hideFrameStatusColumn = true;
+  const hideFrameStatusColumn =
+    userRoles.includes('in') ||
+    userRoles.includes('dongGoi') ||
+    userRoles.includes('keToanDieuDon') ||
+    isFinance;
 
   const stats = {
     total: allOrders.length,
@@ -600,8 +598,6 @@ function Orders() {
                 <option value="yeu_cau_in_lai">Yêu cầu in lại</option>
               </select>
             </div>
-            {/* Ẩn bộ lọc trạng thái khung vì hiện không sử dụng */}
-            {/*
             <div className="col-12 col-md-2">
               <label className="form-label">Trạng thái khung</label>
               <select
@@ -618,7 +614,6 @@ function Orders() {
                 <option value="khong_cat_khung">Không cắt khung</option>
               </select>
             </div>
-            */}
           </div>
           <div className="row g-3 mt-2">
             {!isCatKhung && (

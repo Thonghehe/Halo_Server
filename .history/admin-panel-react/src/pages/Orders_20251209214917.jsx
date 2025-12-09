@@ -1,13 +1,10 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Mosaic } from 'react-loading-indicators';
-import { useQueryClient } from '@tanstack/react-query';
 import api from '../utils/api';
-import { useOrders, useAllOrders, useSales } from '../hooks/useOrders';
 import OrderDetailModal from '../components/OrderDetailModal';
+import Loading from '../components/Loading';
 import '../styles/Orders.css';
 import { useAuth } from '../contexts/AuthContext';
-
 const buildQueryString = (q = {}) => {
   const params = new URLSearchParams();
   if (q.status) params.append('status', q.status);
@@ -22,8 +19,8 @@ const buildQueryString = (q = {}) => {
 };
 
 function Orders() {
-  const queryClient = useQueryClient();
   const [orders, setOrders] = useState([]);
+  const [allOrders, setAllOrders] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -45,17 +42,13 @@ function Orders() {
   });
   const [sortOrder, setSortOrder] = useState(''); // 'asc' | 'desc' | ''
   const [frameSizeSort, setFrameSizeSort] = useState(''); // 'smallToLarge' | 'largeToSmall' | ''
-  const [confirmingId, setConfirmingId] = useState(null);
+  const [sales, setSales] = useState([]);
   const { user } = useAuth();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
   const pendingQueryRef = useRef(pendingQuery);
   const refreshTimeoutRef = useRef(null);
   const sortOrderRef = useRef(sortOrder);
   const frameSizeSortRef = useRef(frameSizeSort);
-
-  // Sử dụng React Query hooks
-  const { data: allOrders = [], isLoading: allOrdersLoading } = useAllOrders();
-  const { data: sales = [] } = useSales();
 
   const getUserId = (userObj) => userObj?._id || userObj?.id;
 
@@ -67,19 +60,16 @@ function Orders() {
     return createdBy._id || createdBy.id;
   };
 
-  // Load orders với filters từ pendingQuery
-  const queryFilters = useMemo(() => {
-    const q = { ...pendingQuery };
-    // Remove empty values
-    Object.keys(q).forEach(key => {
-      if (q[key] === '' || q[key] === null || q[key] === undefined) {
-        delete q[key];
+  const loadAllOrders = useCallback(async () => {
+    try {
+      const response = await api.get('/api/orders?limit=1000');
+      if (response.data.success) {
+        setAllOrders(response.data.data);
       }
-    });
-    return q;
-  }, [pendingQuery]);
-
-  const { data: ordersData = [], isLoading: ordersLoading } = useOrders(queryFilters);
+    } catch (err) {
+      console.error('Error loading all orders:', err);
+    }
+  }, []);
 
   // Tính tổng diện tích khung cho một đơn hàng (cm²)
   const calculateTotalFrameArea = useCallback((order) => {
@@ -129,19 +119,33 @@ function Orders() {
     return sorted;
   }, [calculateTotalFrameArea]);
 
-  // Sort orders khi data thay đổi
-  useEffect(() => {
-    if (ordersData && ordersData.length > 0) {
-      const sortedOrders = sortOrdersData(ordersData, sortOrderRef.current, frameSizeSortRef.current);
-      setOrders(sortedOrders);
-      setTableLoading(false);
-      setPageLoading(false);
-    } else if (!ordersLoading) {
-      setOrders([]);
-      setTableLoading(false);
-      setPageLoading(false);
+  const loadOrders = useCallback(async (q = {}, options = {}) => {
+    const { preserveScroll = false, silent = false } = options;
+    const savedScroll = preserveScroll ? { x: window.scrollX, y: window.scrollY } : null;
+    try {
+      if (!silent) {
+        setTableLoading(true);
+      }
+      const qs = buildQueryString(q);
+      const url = qs ? `/api/orders?${qs}` : '/api/orders';
+      const response = await api.get(url);
+      if (response.data.success) {
+        const sortedOrders = sortOrdersData(response.data.data, sortOrderRef.current, frameSizeSortRef.current);
+        setOrders(sortedOrders);
+      }
+    } catch (err) {
+      console.error('Error loading orders:', err);
+    } finally {
+      if (!silent) {
+        setTableLoading(false);
+      }
+      if (preserveScroll && savedScroll) {
+        requestAnimationFrame(() => {
+          window.scrollTo(savedScroll.x, savedScroll.y);
+        });
+      }
     }
-  }, [ordersData, ordersLoading, sortOrdersData]);
+  }, [sortOrdersData]);
 
   useEffect(() => {
     pendingQueryRef.current = pendingQuery;
@@ -156,40 +160,99 @@ function Orders() {
   }, [frameSizeSort]);
 
   useEffect(() => {
-    if (sortOrder || frameSizeSort) {
-      // Nếu có sort, chỉ sort lại data hiện có
+    if (!sortOrder && !frameSizeSort) {
+      loadOrders({ ...pendingQueryRef.current }, { preserveScroll: true, silent: true });
+    } else {
       setOrders((prev) => sortOrdersData(prev, sortOrder, frameSizeSort));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortOrder, frameSizeSort]);
 
-
   const triggerRealtimeRefresh = useCallback(() => {
     if (refreshTimeoutRef.current) return;
-    refreshTimeoutRef.current = setTimeout(() => {
-      // Invalidate queries để refetch
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      refreshTimeoutRef.current = null;
+    refreshTimeoutRef.current = setTimeout(async () => {
+      try {
+        await Promise.all([
+          loadAllOrders(),
+          loadOrders({ ...pendingQueryRef.current }, { preserveScroll: true, silent: true })
+        ]);
+      } finally {
+        refreshTimeoutRef.current = null;
+      }
     }, 300);
-  }, [queryClient]);
+  }, [loadAllOrders, loadOrders]);
+
+  // Load danh sách sale
+  useEffect(() => {
+    const loadSales = async () => {
+      try {
+        const response = await api.get('/api/orders/sales');
+        if (response.data.success) {
+          setSales(response.data.data);
+        }
+      } catch (err) {
+        console.error('Error loading sales:', err);
+      }
+    };
+    loadSales();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await Promise.all([loadAllOrders(), loadOrders(filters)]);
+      } finally {
+        setPageLoading(false);
+      }
+    })();
+  }, [loadAllOrders, loadOrders]);
 
   // Auto-load table when search text changes (debounced) - affects only table
   useEffect(() => {
     const handler = setTimeout(() => {
       if (pendingQuery.search.length === 0 || pendingQuery.search.length >= 2) {
-        // Invalidate queries để refetch với filters mới
-        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        loadOrders({ ...pendingQuery });
       }
     }, 400);
     return () => clearTimeout(handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingQuery.search, queryClient]);
+  }, [pendingQuery.search]);
 
-  // Auto-load table immediately when filters change
+  // Auto-load table immediately when status changes
   useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    loadOrders({ ...pendingQuery });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingQuery.status, pendingQuery.orderType, pendingQuery.printingStatus, pendingQuery.frameCuttingStatus, pendingQuery.startDate, pendingQuery.endDate, pendingQuery.createdBy, queryClient]);
+  }, [pendingQuery.status]);
+
+  // Auto-load table immediately when orderType changes
+  useEffect(() => {
+    loadOrders({ ...pendingQuery });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingQuery.orderType]);
+
+  // Auto-load table immediately when printingStatus changes
+  useEffect(() => {
+    loadOrders({ ...pendingQuery });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingQuery.printingStatus]);
+
+  // Auto-load table immediately when frameCuttingStatus changes
+  useEffect(() => {
+    loadOrders({ ...pendingQuery });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingQuery.frameCuttingStatus]);
+
+  // Auto-load table immediately when date range changes
+  useEffect(() => {
+    loadOrders({ ...pendingQuery });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingQuery.startDate, pendingQuery.endDate]);
+
+  // Auto-load table immediately when createdBy changes
+  useEffect(() => {
+    loadOrders({ ...pendingQuery });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingQuery.createdBy]);
 
   useEffect(() => {
     if (!user) return;
@@ -220,7 +283,7 @@ function Orders() {
 
   const applySearch = () => {
     setFilters(pendingQuery);
-    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    loadOrders(pendingQuery);
   };
 
   const handleQuickSort = (order) => {
@@ -337,10 +400,10 @@ function Orders() {
       
       // Xanh dương (info): Đang xử lý
       dang_cat_khung: 'bg-info text-white',
-      
-      da_cat_khung: 'bg-success text-white',
+      da_cat_khung: 'bg-info text-white',
       
       // Xanh lá (success): Hoàn thành
+      
       
       // Đỏ (danger): Yêu cầu sửa lại
       yeu_cau_cat_lai: 'bg-danger text-white'
@@ -410,46 +473,16 @@ function Orders() {
     }, 0);
   };
 
-  const calculateActualReceived = useCallback((order) => {
-    if (!order) return 0;
-    if (typeof order.actualReceivedAmount === 'number' && order.actualReceivedAmount > 0) {
-      return order.actualReceivedAmount;
-    }
-    const totalAmount = Number(order.totalAmount || 0);
-    const depositAmount = Number(order.depositAmount || 0);
-    const cod = typeof order.cod === 'number'
-      ? order.cod
-      : Math.max(totalAmount - depositAmount, 0);
-    const shippingInstallationPrice = Number(order.shippingInstallationPrice || 0);
-    const customerPaysShipping = order.customerPaysShipping !== false; // mặc định true
-    if (!customerPaysShipping && shippingInstallationPrice > 0) {
-      return Math.max(0, cod - shippingInstallationPrice);
-    }
-    return cod;
-  }, []);
-
-  const formatCurrency = (value) => {
-    if (value === null || value === undefined || isNaN(value)) return '-';
-    try {
-      return Number(value).toLocaleString('vi-VN') + 'đ';
-    } catch {
-      return value;
-    }
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
 
-  // Calculate stats
   const userRoles = user?.roles || [];
   const isCatKhung = userRoles.includes('catKhung');
-  const isFinance = userRoles.includes('keToanTaiChinh');
-  const isAccountingOps = userRoles.includes('keToanDieuDon');
-  const canViewActualReceived = isFinance || isAccountingOps;
-  // Hiển thị cột người tạo cho sale, kế toán điều đơn và kế toán tài chính
-  const showCreatorColumn = userRoles.includes('sale') || isAccountingOps || isFinance;
+  const isPublic = !userRoles.includes('admin') && !userRoles.includes('sale') && !userRoles.includes('keToanDieuDon') && !userRoles.includes('keToanTaiChinh');
+  // Hiển thị cột người tạo cho public, sale, kế toán điều đơn và kế toán tài chính
+  const showCreatorColumn = isPublic || userRoles.includes('sale') || userRoles.includes('keToanDieuDon') || userRoles.includes('keToanTaiChinh')||userRoles.includes('admin');
   const hideCustomerColumn =
     userRoles.includes('in') ||
     userRoles.includes('sanXuat') ||
@@ -458,20 +491,18 @@ function Orders() {
     userRoles.includes('catKhung') ||
     userRoles.includes('dongGoi') ||
     userRoles.includes('keToanDieuDon') ||
-    isFinance;
-  // Ẩn cột trạng thái khung vì hiện không sử dụng
-  // const hideFrameStatusColumn =
-  //   userRoles.includes('in') ||
-  //   userRoles.includes('dongGoi') ||
-  //   userRoles.includes('keToanDieuDon') ||
-  //   isFinance;
-  const hideFrameStatusColumn = true;
+    userRoles.includes('keToanTaiChinh');
+  const hideFrameStatusColumn =
+    userRoles.includes('in') ||
+    userRoles.includes('dongGoi') ||
+    userRoles.includes('keToanDieuDon') ||
+    userRoles.includes('keToanTaiChinh');
 
   const stats = {
     total: allOrders.length,
-    processing: allOrders.filter(o => 
-      ['dang_xu_ly', 'cho_san_xuat', 'da_vao_khung', 'cho_dong_goi', 'cho_dieu_don'].includes(o.status)
-    ).length,
+    processing: allOrders.filter(
+      (o) => o.status !== 'hoan_thanh' && o.status !== 'huy'
+    ).length, // Chưa hoàn thành và chưa hủy
     completed: allOrders.filter(o => o.status === 'hoan_thanh').length,
     cancelled: allOrders.filter(o => o.status === 'huy').length
   };
@@ -481,51 +512,47 @@ function Orders() {
     setShowModal(true);
   };
 
-  const handleFinanceConfirm = async (order) => {
-    if (!order) return;
-    const calculatedActualReceived = calculateActualReceived(order);
-    const orderId = order._id || order.id;
-    const confirmMessage = 'Bạn có chắc chắn đơn hàng này đã  "Đã thanh toán đầy đủ" ?';
-    const ok = window.confirm(confirmMessage);
-    if (!ok) return;
-
-    setConfirmingId(orderId);
-    try {
-      const res = await api.patch(`/api/orders/${orderId}/complete`, {
-        role: 'keToanTaiChinh',
-        actualReceivedAmount: calculatedActualReceived
-      });
-      if (res.data?.success) {
-        queryClient.invalidateQueries({
-          predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === 'orders'
-        });
-      }
-    } catch (err) {
-      console.error('Finance confirm error', err);
-      const message = err?.response?.data?.message || 'Thao tác thất bại';
-      alert(message);
-    } finally {
-      setConfirmingId(null);
-    }
-  };
-
   const closeModal = () => {
     setShowModal(false);
     setSelectedOrderId(null);
   };
 
   if (pageLoading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <Mosaic color={["#32cd32", "#327fcd", "#cd32cd", "#cd8032"]} />
-      </div>
-    );
+    return <Loading className="py-5" style={{ minHeight: '400px' }} />;
   }
 
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4 orders-header-responsive">
         <h2>Quản lý Đơn hàng</h2>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="row mb-4">
+        <div className="col-6 col-md-3">
+          <div className="stat-card bg-primary text-white">
+            <h3>{stats.total}</h3>
+            <p>Tổng đơn hàng</p>
+          </div>
+        </div>
+        <div className="col-6 col-md-3">
+          <div className="stat-card bg-warning text-white">
+            <h3>{stats.processing}</h3>
+            <p>Chưa hoàn thành</p>
+          </div>
+        </div>
+        <div className="col-6 col-md-3">
+          <div className="stat-card bg-success text-white">
+            <h3>{stats.completed}</h3>
+            <p>Hoàn thành</p>
+          </div>
+        </div>
+        <div className="col-6 col-md-3">
+          <div className="stat-card bg-danger text-white">
+            <h3>{stats.cancelled}</h3>
+            <p>Đã hủy</p>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -551,9 +578,9 @@ function Orders() {
                 onChange={(e) => setPendingQuery({ ...pendingQuery, status: e.target.value })}
               >
                 <option value="">Tất cả trạng thái</option>
-                <option value="chua_hoan_thanh">Chưa hoàn thành</option>
+                <option value="chua_hoan_thanh">Chưa hoàn thành (trừ Hoàn thành, Hủy)</option>
                 <option value="moi_tao">Mới tạo</option>
-                <option value="dang_xu_ly">Đang xử lý (Tất cả)</option>
+                <option value="dang_xu_ly">Đang xử lý</option>
                 <option value="cho_san_xuat">Chờ sản xuất</option>
                 <option value="da_vao_khung">Đã vào khung</option>
                 <option value="cho_dong_goi">Chờ đóng gói</option>
@@ -600,8 +627,6 @@ function Orders() {
                 <option value="yeu_cau_in_lai">Yêu cầu in lại</option>
               </select>
             </div>
-            {/* Ẩn bộ lọc trạng thái khung vì hiện không sử dụng */}
-            {/*
             <div className="col-12 col-md-2">
               <label className="form-label">Trạng thái khung</label>
               <select
@@ -618,7 +643,6 @@ function Orders() {
                 <option value="khong_cat_khung">Không cắt khung</option>
               </select>
             </div>
-            */}
           </div>
           <div className="row g-3 mt-2">
             {!isCatKhung && (
@@ -724,25 +748,23 @@ function Orders() {
                   <th>Loại</th>
                   <th>Ngày tạo</th>
                   {showCreatorColumn && <th>Người tạo</th>}
-                  {canViewActualReceived && <th>Tiền thực nhận</th>}
                   <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {(() => {
-                   const baseColumns = 9; // mã, khách, sđt, trạng thái, in, khung, loại, ngày, thao tác
+                  const baseColumns = 9;
                   const visibleColumnCount =
                     baseColumns -
                     (hideCustomerColumn ? 1 : 0) -
                     (hidePrintingStatusColumn ? 1 : 0) -
                     (hideFrameStatusColumn ? 1 : 0) +
-                    (showCreatorColumn ? 1 : 0) +
-                     (canViewActualReceived ? 1 : 0);
+                    (showCreatorColumn ? 1 : 0);
                   if (tableLoading) {
                     return (
                       <tr>
                         <td colSpan={visibleColumnCount} className="text-center py-4">
-                          <Mosaic color={["#32cd32", "#327fcd", "#cd32cd", "#cd8032"]} />
+                          <Loading size="small" />
                         </td>
                       </tr>
                     );
@@ -757,9 +779,9 @@ function Orders() {
                     );
                   }
                   return orders.map((order) => (
-                    <tr
+                    <tr 
                       key={order._id || order.id}
-                      onClick={() => setShowModal(true) || setSelectedOrderId(order._id || order.id)}
+                      onClick={() => handleViewDetail(order._id || order.id)}
                       style={{ cursor: 'pointer' }}
                       className="order-row"
                     >
@@ -799,14 +821,10 @@ function Orders() {
                           {order.createdBy?.fullName || order.createdBy?.email || '-'}
                         </td>
                       )}
-                      {canViewActualReceived && (
-                        <td>{formatCurrency(calculateActualReceived(order))}</td>
-                      )}
                       <td onClick={(e) => e.stopPropagation()}>
                         {(() => {
                           const canEdit = userRoles.includes('admin') || userRoles.includes('sale');
-                          const blocked = ['huy', 'da_gui_di', 'hoan_thanh', 'cat_vao_kho'].includes(order.status);
-                          const canFinanceConfirm = isFinance && order.status === 'da_gui_di';
+                          const blocked = ['huy', 'da_gui_di', 'hoan_thanh'].includes(order.status);
                           const showPendingDraftIndicator = order.hasPendingMoneyDraft;
                           if (canEdit && !blocked) {
                             return (
@@ -827,20 +845,6 @@ function Orders() {
                               </div>
                             );
                           }
-                          if (canFinanceConfirm) {
-                            return (
-                              <button
-                                className="btn btn-sm btn-success"
-                                onClick={(evt) => {
-                                  evt.stopPropagation();
-                                  handleFinanceConfirm(order);
-                                }}
-                                disabled={confirmingId === (order._id || order.id)}
-                              >
-                                {confirmingId === (order._id || order.id) ? 'Đang xác nhận...' : 'Xác nhận'}
-                              </button>
-                            );
-                          }
                           return null;
                         })()}
                       </td>
@@ -857,7 +861,7 @@ function Orders() {
       <div className="order-card-mobile">
         {tableLoading ? (
           <div className="text-center py-4">
-            <Mosaic color={["#32cd32", "#327fcd", "#cd32cd", "#cd8032"]} />
+            <Loading size="small" />
           </div>
         ) : orders.length === 0 ? (
           <div className="text-center text-muted py-4">
@@ -866,12 +870,12 @@ function Orders() {
         ) : (
           orders.map((order) => {
             const canEdit = userRoles.includes('admin') || userRoles.includes('sale');
-            const blocked = ['huy', 'da_gui_di', 'hoan_thanh', 'cat_vao_kho'].includes(order.status);
+            const blocked = ['huy', 'da_gui_di', 'hoan_thanh'].includes(order.status);
             return (
               <div
                 key={order._id || order.id}
                 className="order-card"
-                onClick={() => setShowModal(true) || setSelectedOrderId(order._id || order.id)}
+                onClick={() => handleViewDetail(order._id || order.id)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className="order-card-header">
@@ -913,20 +917,12 @@ function Orders() {
                       </span>
                     </div>
                   </div>
-                   {showCreatorColumn && (
+                  {showCreatorColumn && (
                     <div className="order-card-field">
                       <div className="order-card-label">Người tạo</div>
                       <div className="order-card-value">{order.createdBy?.fullName || order.createdBy?.email || '-'}</div>
                     </div>
                   )}
-                   {canViewActualReceived && (
-                     <div className="order-card-field">
-                       <div className="order-card-label">Tiền thực nhận</div>
-                       <div className="order-card-value">
-                         {formatCurrency(calculateActualReceived(order))}
-                       </div>
-                     </div>
-                   )}
                 </div>
                 {canEdit && !blocked && (
                   <div className="order-card-actions d-flex align-items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -955,7 +951,7 @@ function Orders() {
       <OrderDetailModal
         orderId={selectedOrderId}
         show={showModal}
-        onClose={() => { setShowModal(false); setSelectedOrderId(null); }}
+        onClose={closeModal}
         onOrderUpdated={() => {
           triggerRealtimeRefresh();
         }}

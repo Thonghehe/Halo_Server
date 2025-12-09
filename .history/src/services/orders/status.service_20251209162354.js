@@ -134,45 +134,6 @@ export const updateOrderStatus = async (orderId, body = {}, currentUser) => {
         }
 
         await sendNotificationToStatusRoles(order, currentUser, title, message, actionType);
-
-        if (status === 'khach_tra_hang') {
-          try {
-            const creator = order.createdBy;
-            let creatorId = null;
-            if (creator) {
-              if (typeof creator === 'string') {
-                creatorId = creator;
-              } else if (creator?._id) {
-                creatorId = creator._id;
-              } else if (typeof creator === 'object' && typeof creator.toString === 'function') {
-                creatorId = creator.toString();
-              }
-            }
-
-            if (creatorId && currentUser?._id?.toString() !== creatorId.toString()) {
-              await insertNotificationsAndEmit([
-                {
-                  recipient: creatorId,
-                  sender: currentUser._id,
-                  title: 'Khách hoàn hàng',
-                  message:
-                    `${displayName} đã đánh dấu đơn hàng ${order.orderCode || order._id} là khách hoàn hàng` +
-                    (note ? ` - ${note}` : ''),
-                  type: 'order',
-                  link: `/orders/${order._id}`,
-                  orderId: order._id,
-                  metadata: {
-                    orderCode: order.orderCode || order._id,
-                    status,
-                    actionType: 'return'
-                  }
-                }
-              ]);
-            }
-          } catch (creatorNotifyError) {
-            console.error('[orders.service][updateOrderStatus] Creator notify error:', creatorNotifyError);
-          }
-        }
       } catch (notifyError) {
         console.error('[orders.service][updateOrderStatus] Notify error:', notifyError);
       }

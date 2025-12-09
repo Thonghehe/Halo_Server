@@ -207,10 +207,7 @@ export function useOrderPermissions(order, user) {
   const canMarkReturnOrFix = useMemo(() => {
     if (!user || !order) return false;
     const roles = user.roles || [];
-    const isPrivileged =
-      roles.includes('admin') ||
-      roles.includes('sale') ||
-      roles.includes('keToanDieuDon');
+    const isPrivileged = roles.includes('admin') || roles.includes('sale');
     const currentStatus = order.status || 'moi_tao';
     return isPrivileged && currentStatus === 'da_gui_di';
   }, [user, order]);

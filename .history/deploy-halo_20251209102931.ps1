@@ -16,7 +16,7 @@ Write-Host "`n=== [2] SSH server & deploy Docker ===" -ForegroundColor Yellow
 
 # Server info
 $serverUser = "halo"
-$serverHost = "171.244.65.176"
+$serverHost = "192.168.0.9"
 $serverPath = "/var/www/halo/Halo_BE"
 
 # Lệnh chạy trên server

@@ -15,8 +15,6 @@ const buildQueryString = (q = {}) => {
   if (q.startDate) params.append('startDate', q.startDate);
   if (q.endDate) params.append('endDate', q.endDate);
   if (q.createdBy) params.append('createdBy', q.createdBy);
-  if (q.page) params.append('page', q.page);
-  if (q.limit) params.append('limit', q.limit);
   return params.toString();
 };
 
@@ -25,9 +23,6 @@ function Orders() {
   const [allOrders, setAllOrders] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(100);
-  const [pagination, setPagination] = useState({ page: 1, limit: 100, total: 0, pages: 1 });
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [filters, setFilters] = useState({
@@ -127,27 +122,16 @@ function Orders() {
   const loadOrders = useCallback(async (q = {}, options = {}) => {
     const { preserveScroll = false, silent = false } = options;
     const savedScroll = preserveScroll ? { x: window.scrollX, y: window.scrollY } : null;
-    const nextPage = Number(q.page || page || 1);
-    const nextLimit = Number(q.limit || limit || 100);
     try {
       if (!silent) {
         setTableLoading(true);
       }
-      const qs = buildQueryString({ ...q, page: nextPage, limit: nextLimit });
+      const qs = buildQueryString(q);
       const url = qs ? `/api/orders?${qs}` : '/api/orders';
       const response = await api.get(url);
       if (response.data.success) {
         const sortedOrders = sortOrdersData(response.data.data, sortOrderRef.current, frameSizeSortRef.current);
         setOrders(sortedOrders);
-        const pg = response.data.pagination || {};
-        setPagination({
-          page: pg.page || nextPage,
-          limit: pg.limit || nextLimit,
-          total: pg.total || sortedOrders.length,
-          pages: pg.pages || 1
-        });
-        setPage(pg.page || nextPage);
-        setLimit(pg.limit || nextLimit);
       }
     } catch (err) {
       console.error('Error loading orders:', err);
@@ -161,7 +145,7 @@ function Orders() {
         });
       }
     }
-  }, [sortOrdersData, page, limit]);
+  }, [sortOrdersData]);
 
   useEffect(() => {
     pendingQueryRef.current = pendingQuery;
@@ -236,43 +220,37 @@ function Orders() {
 
   // Auto-load table immediately when status changes
   useEffect(() => {
-    setPage(1);
-    loadOrders({ ...pendingQuery, page: 1, limit });
+    loadOrders({ ...pendingQuery });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuery.status]);
 
   // Auto-load table immediately when orderType changes
   useEffect(() => {
-    setPage(1);
-    loadOrders({ ...pendingQuery, page: 1, limit });
+    loadOrders({ ...pendingQuery });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuery.orderType]);
 
   // Auto-load table immediately when printingStatus changes
   useEffect(() => {
-    setPage(1);
-    loadOrders({ ...pendingQuery, page: 1, limit });
+    loadOrders({ ...pendingQuery });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuery.printingStatus]);
 
   // Auto-load table immediately when frameCuttingStatus changes
   useEffect(() => {
-    setPage(1);
-    loadOrders({ ...pendingQuery, page: 1, limit });
+    loadOrders({ ...pendingQuery });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuery.frameCuttingStatus]);
 
   // Auto-load table immediately when date range changes
   useEffect(() => {
-    setPage(1);
-    loadOrders({ ...pendingQuery, page: 1, limit });
+    loadOrders({ ...pendingQuery });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuery.startDate, pendingQuery.endDate]);
 
   // Auto-load table immediately when createdBy changes
   useEffect(() => {
-    setPage(1);
-    loadOrders({ ...pendingQuery, page: 1, limit });
+    loadOrders({ ...pendingQuery });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuery.createdBy]);
 
@@ -305,8 +283,7 @@ function Orders() {
 
   const applySearch = () => {
     setFilters(pendingQuery);
-    setPage(1);
-    loadOrders({ ...pendingQuery, page: 1, limit });
+    loadOrders(pendingQuery);
   };
 
   const handleQuickSort = (order) => {
@@ -327,19 +304,6 @@ function Orders() {
       setFrameSizeSort(direction);
       setSortOrder(''); // Reset date sort when using frame size sort
     }
-  };
-
-  const handlePageChange = (nextPage) => {
-    if (nextPage < 1 || nextPage > pagination.pages) return;
-    setPage(nextPage);
-    loadOrders({ ...pendingQueryRef.current, page: nextPage, limit });
-  };
-
-  const handleLimitChange = (e) => {
-    const newLimit = Number(e.target.value) || 100;
-    setLimit(newLimit);
-    setPage(1);
-    loadOrders({ ...pendingQueryRef.current, page: 1, limit: newLimit });
   };
 
   const onKeyDownSearch = (e) => {
@@ -894,41 +858,6 @@ function Orders() {
                 })()}
               </tbody>
             </table>
-          </div>
-
-          <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
-            <div className="d-flex align-items-center gap-2">
-              <span className="text-muted small">
-                Trang {pagination.page}/{pagination.pages} • Tổng {pagination.total} đơn
-              </span>
-              <select
-                className="form-select form-select-sm"
-                style={{ width: '90px' }}
-                value={limit}
-                onChange={handleLimitChange}
-              >
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-                <option value={200}>200</option>
-              </select>
-            </div>
-            <div className="btn-group">
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                disabled={pagination.page <= 1}
-                onClick={() => handlePageChange(pagination.page - 1)}
-              >
-                <i className="bi bi-chevron-left"></i> Trước
-              </button>
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                disabled={pagination.page >= pagination.pages}
-                onClick={() => handlePageChange(pagination.page + 1)}
-              >
-                Sau <i className="bi bi-chevron-right"></i>
-              </button>
-            </div>
           </div>
         </div>
       </div>

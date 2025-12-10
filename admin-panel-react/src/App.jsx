@@ -10,6 +10,7 @@ import UserDetail from './pages/UserDetail';
 import Orders from './pages/Orders';
 import CreateOrder from './pages/CreateOrder';
 import EditOrder from './pages/EditOrder';
+import Cashflow from './pages/Cashflow';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
 import Layout from './components/Layout';
@@ -53,6 +54,7 @@ function App() {
           <Route path="orders" element={<Orders />} />
           <Route path="orders/create" element={<CreateOrder />} />
           <Route path="orders/:orderId/edit" element={<EditOrder />} />
+          <Route path="cashflow" element={<Cashflow />} />
           <Route path="notifications" element={<Notifications />} />
         </Route>
       </Routes>

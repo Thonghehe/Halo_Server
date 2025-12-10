@@ -168,6 +168,16 @@ function Layout() {
           </li>
           <li>
             <Link 
+              to="/cashflow" 
+              className={isActive('/cashflow') ? 'active' : ''}
+              onClick={handleLinkClick}
+            >
+              <i className="bi bi-cash-stack"></i>
+              <span>Thống kê dòng tiền</span>
+            </Link>
+          </li>
+          <li>
+            <Link 
               to="/profile" 
               className={isActive('/profile') ? 'active' : ''}
               onClick={handleLinkClick}

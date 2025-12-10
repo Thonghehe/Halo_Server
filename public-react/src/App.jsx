@@ -11,6 +11,7 @@ import EditOrder from './pages/EditOrder';
 import Layout from './components/Layout';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
+import Cashflow from './pages/Cashflow';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -49,6 +50,7 @@ function App() {
           <Route path="orders" element={<Orders />} />
           <Route path="orders/create" element={<CreateOrder />} />
           <Route path="orders/:orderId/edit" element={<EditOrder />} />
+          <Route path="cashflow" element={<Cashflow />} />
           <Route path="notifications" element={<Notifications />} />
         </Route>
       </Routes>

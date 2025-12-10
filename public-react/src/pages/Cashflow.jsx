@@ -13,20 +13,18 @@ const buildQuickRange = (rangeKey) => {
   const end = new Date();
 
   switch (rangeKey) {
-    case 'today': {
+    case 'today':
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
       break;
-    }
-    case 'yesterday': {
+    case 'yesterday':
       start.setDate(now.getDate() - 1);
       end.setDate(now.getDate() - 1);
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
       break;
-    }
     case 'thisWeek': {
-      const day = now.getDay() === 0 ? 7 : now.getDay(); // Chủ nhật = 7
+      const day = now.getDay() === 0 ? 7 : now.getDay();
       start.setDate(now.getDate() - (day - 1));
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
@@ -40,25 +38,21 @@ const buildQuickRange = (rangeKey) => {
       start.setHours(0, 0, 0, 0);
       break;
     }
-    case 'thisMonth': {
+    case 'thisMonth':
       start.setDate(1);
       start.setHours(0, 0, 0, 0);
       end.setMonth(now.getMonth() + 1, 0);
       end.setHours(23, 59, 59, 999);
       break;
-    }
-    case 'lastMonth': {
+    case 'lastMonth':
       start.setMonth(now.getMonth() - 1, 1);
       start.setHours(0, 0, 0, 0);
-      end.setDate(0); // ngày cuối tháng trước
+      end.setDate(0);
       end.setHours(23, 59, 59, 999);
       break;
-    }
-    default: {
+    default:
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
-      break;
-    }
   }
 
   return {
@@ -115,7 +109,6 @@ function Cashflow() {
     setLoading(true);
     setError('');
     try {
-      // Lấy nhiều hơn để tính toán (tối đa 2000 đơn)
       const response = await api.get('/api/orders?limit=2000');
       if (response.data.success) {
         setOrders(response.data.data || []);
@@ -229,7 +222,7 @@ function Cashflow() {
       }
     });
 
-    // Công nợ: Tổng đơn - Thực nhận + Cọc (theo yêu cầu)
+    // Công nợ: Tổng đơn - Thực nhận + Cọc
     totals.debt = totals.totalAmount - totals.actualReceived + totals.depositAmount;
     return totals;
   }, [filteredOrders]);

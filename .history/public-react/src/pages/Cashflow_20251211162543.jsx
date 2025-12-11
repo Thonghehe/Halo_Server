@@ -27,15 +27,14 @@ const buildQuickRange = (rangeKey) => {
       end.setHours(23, 59, 59, 999);
       break;
     }
-    case 'yesterday': {
+    case 'yesterday':
       start.setDate(now.getDate() - 1);
       end.setDate(now.getDate() - 1);
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
       break;
-    }
     case 'thisWeek': {
-      const day = now.getDay() === 0 ? 7 : now.getDay(); // Chủ nhật = 7
+      const day = now.getDay() === 0 ? 7 : now.getDay();
       start.setDate(now.getDate() - (day - 1));
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
@@ -49,25 +48,21 @@ const buildQuickRange = (rangeKey) => {
       start.setHours(0, 0, 0, 0);
       break;
     }
-    case 'thisMonth': {
+    case 'thisMonth':
       start.setDate(1);
       start.setHours(0, 0, 0, 0);
       end.setMonth(now.getMonth() + 1, 0);
       end.setHours(23, 59, 59, 999);
       break;
-    }
-    case 'lastMonth': {
+    case 'lastMonth':
       start.setMonth(now.getMonth() - 1, 1);
       start.setHours(0, 0, 0, 0);
-      end.setDate(0); // ngày cuối tháng trước
+      end.setDate(0);
       end.setHours(23, 59, 59, 999);
       break;
-    }
-    default: {
+    default:
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
-      break;
-    }
   }
 
   return {
@@ -151,7 +146,6 @@ function Cashflow() {
     setLoading(true);
     setError('');
     try {
-      // Lấy nhiều hơn để tính toán (tối đa 2000 đơn)
       const response = await api.get('/api/orders?limit=2000');
       if (response.data.success) {
         setOrders(response.data.data || []);
@@ -300,13 +294,21 @@ function Cashflow() {
     return totals;
   }, [filteredOrders]);
 
-  // Phân trang danh sách hiển thị, nhưng export CSV vẫn dùng full filteredOrders
+  // Phân trang danh sách hiển thị, export CSV vẫn dùng full filteredOrders
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / limit));
   const currentPage = Math.min(page, totalPages);
+  const sortedOrders = useMemo(() => {
+    return [...filteredOrders].sort((a, b) => {
+      const aDate = a?.createdAt ? new Date(a.createdAt) : 0;
+      const bDate = b?.createdAt ? new Date(b.createdAt) : 0;
+      return bDate - aDate;
+    });
+  }, [filteredOrders]);
+
   const paginatedOrders = useMemo(() => {
     const startIdx = (currentPage - 1) * limit;
-    return filteredOrders.slice(startIdx, startIdx + limit);
-  }, [filteredOrders, currentPage, limit]);
+    return sortedOrders.slice(startIdx, startIdx + limit);
+  }, [sortedOrders, currentPage, limit]);
 
   const exportToCsv = () => {
     const headers = [

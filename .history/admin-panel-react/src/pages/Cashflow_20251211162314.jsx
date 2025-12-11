@@ -300,6 +300,18 @@ function Cashflow() {
     return totals;
   }, [filteredOrders]);
 
+  // Reset về trang 1 khi bộ lọc thay đổi
+  useEffect(() => {
+    setPage(1);
+  }, [
+    filters.search,
+    filters.startDate,
+    filters.endDate,
+    filters.status,
+    filters.saleId,
+    filters.quickRange,
+  ]);
+
   // Phân trang danh sách hiển thị, nhưng export CSV vẫn dùng full filteredOrders
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / limit));
   const currentPage = Math.min(page, totalPages);

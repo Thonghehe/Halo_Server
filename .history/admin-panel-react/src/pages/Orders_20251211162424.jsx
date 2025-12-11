@@ -187,6 +187,20 @@ function Orders() {
     frameSizeSortRef.current = frameSizeSort;
   }, [frameSizeSort]);
 
+  // Reset về trang 1 khi bộ lọc/tham số tìm kiếm thay đổi
+  useEffect(() => {
+    setPage(1);
+  }, [
+    pendingQuery.search,
+    pendingQuery.status,
+    pendingQuery.orderType,
+    pendingQuery.printingStatus,
+    pendingQuery.frameCuttingStatus,
+    pendingQuery.startDate,
+    pendingQuery.endDate,
+    pendingQuery.createdBy,
+  ]);
+
   useEffect(() => {
     if (!sortOrder && !frameSizeSort) {
       loadOrders({ ...pendingQueryRef.current }, { preserveScroll: true, silent: true });

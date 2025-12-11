@@ -121,8 +121,6 @@ function Cashflow() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(50);
   const [filters, setFilters] = useState({
     search: '',
     startDate: '',
@@ -237,8 +235,7 @@ function Cashflow() {
 
   const summary = useMemo(() => {
     const totals = {
-      totalAmount: 0, // đã trừ đơn hủy
-      totalAmountAll: 0, // gồm cả đơn hủy
+      totalAmount: 0,
       paintingRevenue: 0,
       depositAmount: 0,
       cod: 0,
@@ -256,6 +253,14 @@ function Cashflow() {
     };
 
     filteredOrders.forEach((order) => {
+      // Không cộng doanh thu/doanh số cho đơn đã hủy
+      if (order.status === 'huy') {
+        const totalAmount = Number(order.totalAmount || 0);
+        totals.cancelledAmount += totalAmount;
+        totals.cancelledCount += 1;
+        return;
+      }
+
       const totalAmount = Number(order.totalAmount || 0);
       const depositAmount = Number(order.depositAmount || 0);
       const cod = Number(order.cod || 0);
@@ -263,16 +268,6 @@ function Cashflow() {
       const shippingInstallationPrice = Number(order.shippingInstallationPrice || 0);
       const shippingExternalCost = Number(order.shippingExternalCost || 0);
       const actualReceived = calculateActualReceived(order);
-
-      // Luôn cộng vào tổng tiền tất cả đơn (kể cả hủy)
-      totals.totalAmountAll += totalAmount;
-
-      // Không cộng doanh thu/doanh số cho đơn đã hủy
-      if (order.status === 'huy') {
-        totals.cancelledAmount += totalAmount;
-        totals.cancelledCount += 1;
-        return;
-      }
 
       totals.totalAmount += totalAmount;
       totals.paintingRevenue += paintingRevenue;
@@ -299,14 +294,6 @@ function Cashflow() {
     totals.debt = totals.totalAmount - (totals.actualReceived + totals.depositAmount);
     return totals;
   }, [filteredOrders]);
-
-  // Phân trang danh sách hiển thị, nhưng export CSV vẫn dùng full filteredOrders
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / limit));
-  const currentPage = Math.min(page, totalPages);
-  const paginatedOrders = useMemo(() => {
-    const startIdx = (currentPage - 1) * limit;
-    return filteredOrders.slice(startIdx, startIdx + limit);
-  }, [filteredOrders, currentPage, limit]);
 
   const exportToCsv = () => {
     const headers = [
@@ -492,10 +479,10 @@ function Cashflow() {
                 <div className="card-body">
                   <div className="text-muted small">Doanh thu (tổng tiền đơn)</div>
                   <h5 className="mb-1">{formatCurrency(summary.totalAmount)}</h5>
-                  <div className="small text-muted">Tổng tiền đơn (kể cả hủy): {formatCurrency(summary.totalAmountAll)}</div>
                   <div className="small text-success">Hoàn thành: {formatCurrency(summary.completedAmount)}</div>
                   <div className="small text-warning">Chưa hoàn thành: {formatCurrency(summary.incompleteAmount)}</div>
                   <div className="small text-danger">Đã hủy: {formatCurrency(summary.cancelledAmount)}</div>
+                  <div className="small text-primary mt-1">Doanh số (tiền tranh): <strong>{formatCurrency(summary.paintingRevenue)}</strong></div>
                 </div>
               </div>
             </div>
@@ -553,7 +540,7 @@ function Cashflow() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedOrders.map((order) => (
+                  {filteredOrders.map((order) => (
                     <tr key={order._id || order.id}>
                       <td>{order.orderCode}</td>
                       <td>
@@ -587,47 +574,6 @@ function Cashflow() {
                   )}
                 </tbody>
               </table>
-            </div>
-
-            <div className="card-body border-top">
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div className="d-flex align-items-center gap-2">
-                  <span className="text-muted small">
-                    Trang {currentPage}/{totalPages} • Tổng {filteredOrders.length} đơn
-                  </span>
-                  <select
-                    className="form-select form-select-sm"
-                    style={{ width: '90px' }}
-                    value={limit}
-                    onChange={(e) => {
-                      const next = Number(e.target.value) || 50;
-                      setLimit(next);
-                      setPage(1);
-                    }}
-                  >
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                    <option value={200}>200</option>
-                  </select>
-                </div>
-                <div className="btn-group">
-                  <button
-                    className="btn btn-sm btn-outline-secondary"
-                    disabled={currentPage <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  >
-                    <i className="bi bi-chevron-left"></i> Trước
-                  </button>
-                  <button
-                    className="btn btn-sm btn-outline-secondary"
-                    disabled={currentPage >= totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  >
-                    Sau <i className="bi bi-chevron-right"></i>
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </>

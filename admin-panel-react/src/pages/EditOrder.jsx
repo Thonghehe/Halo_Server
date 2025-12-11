@@ -934,7 +934,7 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
         alert('Vui lòng nhập số tiền cọc');
         return false;
       }
-    }
+  }
     return true;
   };
 
@@ -1897,7 +1897,7 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
             ) : (
               <>
                 <div className="row g-3">
-                <div className="col-md-6">
+              <div className="col-md-6">
                     <label className="form-label">Chọn hình thức gửi</label>
                   <select
                     className="form-select"
@@ -1914,9 +1914,9 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
                 {formData.shippingMethod === 'viettel' && (
                   <div className="col-md-6">
                       <label className="form-label">Mã đơn vận</label>
-                    <input
-                      type="text"
-                      className="form-control"
+                  <input
+                    type="text"
+                    className="form-control"
                       value={formData.shippingTrackingCode}
                         onChange={(e) =>
                           setFormData((prev) => ({
@@ -1925,8 +1925,8 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
                           }))
                         }
                       placeholder="Nhập mã vận đơn"
-                    />
-                  </div>
+                  />
+                </div>
                 )}
                   {formData.shippingMethod === 'ship_ngoai' && (
                     <div className="col-12">
@@ -1943,7 +1943,7 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
                         }
                         placeholder="Tên đơn vị ship, người liên hệ, ghi chú..."
                       ></textarea>
-                    </div>
+              </div>
                   )}
                   {formData.shippingMethod === 'khach_den_nhan' && (
                     <div className="col-12">
@@ -1964,26 +1964,26 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
                     <div className="col-md-6">
                       <label className="form-label">Vận chuyển & lắp đặt</label>
                       <div className="input-group">
-                        <input
-                          type="text"
+                  <input
+                    type="text"
                           inputMode="numeric"
-                          className="form-control"
+                    className="form-control"
                           name="shippingInstallationPrice"
                           value={formatCurrency(formData.shippingInstallationPrice)}
                           onChange={(e) => handlePriceChange('shippingInstallationPrice', e.target.value)}
                           placeholder="0"
                         />
                         <span className="input-group-text">VNĐ</span>
-                      </div>
-                    </div>
+                </div>
+              </div>
                     <div className="col-md-6">
                       <div className="form-check mt-4">
-                        <input
+                <input 
                           className="form-check-input"
                           type="checkbox"
                           id="customerPaysShipping"
                           checked={formData.customerPaysShipping}
-                          onChange={(e) => {
+                  onChange={(e) => {
                             setFormData(prev => {
                               const updated = { ...prev, customerPaysShipping: e.target.checked };
                               const subtotal =
@@ -2002,17 +2002,17 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
                           Khách chịu
                         </label>
                       </div>
-                      <small className="text-muted d-block mt-1">
+                <small className="text-muted d-block mt-1">
                         {formData.customerPaysShipping 
                           ? 'Vận chuyển & lắp đặt sẽ tính vào tổng tiền đơn hàng'
                           : 'Vận chuyển & lắp đặt là tiền riêng, không ảnh hưởng tổng tiền'}
-                      </small>
-                    </div>
-                  </>
-                )}
+                </small>
               </div>
+                  </>
+              )}
+                      </div>
               </>
-            )}
+              )}
           </div>
         </div>
 

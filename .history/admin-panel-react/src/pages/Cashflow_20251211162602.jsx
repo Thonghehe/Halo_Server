@@ -303,10 +303,18 @@ function Cashflow() {
   // Phân trang danh sách hiển thị, nhưng export CSV vẫn dùng full filteredOrders
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / limit));
   const currentPage = Math.min(page, totalPages);
+  const sortedOrders = useMemo(() => {
+    return [...filteredOrders].sort((a, b) => {
+      const aDate = a?.createdAt ? new Date(a.createdAt) : 0;
+      const bDate = b?.createdAt ? new Date(b.createdAt) : 0;
+      return bDate - aDate;
+    });
+  }, [filteredOrders]);
+
   const paginatedOrders = useMemo(() => {
     const startIdx = (currentPage - 1) * limit;
-    return filteredOrders.slice(startIdx, startIdx + limit);
-  }, [filteredOrders, currentPage, limit]);
+    return sortedOrders.slice(startIdx, startIdx + limit);
+  }, [sortedOrders, currentPage, limit]);
 
   const exportToCsv = () => {
     const headers = [

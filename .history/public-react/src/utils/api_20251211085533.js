@@ -1,0 +1,117 @@
+import axios from 'axios';
+
+const inferApiBaseUrl = () => {
+  if (typeof window === 'undefined') {
+    return 'http://localhost:4000';
+  }
+
+  const { protocol, hostname } = window.location;
+  const safeProtocol = ['http:', 'https:'].includes(protocol) ? protocol : 'http:';
+
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:4000';
+  }
+
+  return `${safeProtocol}//${hostname}`;
+};
+
+// Normalize API base URL - đảm bảo luôn có protocol
+const normalizeApiBaseUrl = (url) => {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  
+  // Nếu đã có protocol (http:// hoặc https://), trả về nguyên
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  
+  // Nếu không có protocol, thêm http://
+  return `http://${trimmed}`;
+};
+
+const envApiUrl = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = normalizeApiBaseUrl(envApiUrl) || inferApiBaseUrl();
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Trích xuất message từ backend response
+    const backendMessage = error.response?.data?.message;
+    const statusCode = error.response?.status;
+    
+    // Format lại error để hiển thị message tiếng Việt
+    if (backendMessage) {
+      error.message = backendMessage;
+    } else {
+      // Fallback messages nếu không có message từ backend
+      switch (statusCode) {
+        case 401:
+          error.message = 'Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.';
+          break;
+        case 403:
+          error.message = 'Bạn không có quyền truy cập chức năng này.';
+          break;
+        case 404:
+          error.message = 'Không tìm thấy tài nguyên.';
+          break;
+        case 500:
+          error.message = 'Lỗi máy chủ. Vui lòng thử lại sau.';
+          break;
+        default:
+          error.message = 'Đã xảy ra lỗi. Vui lòng thử lại.';
+      }
+    }
+    
+    if (statusCode === 401) {
+      const reqUrl = error.config?.url || '';
+      // Không redirect khi đang gọi login hoặc đang ở trang login
+      if (reqUrl.includes('/api/auth/login')) {
+        return Promise.reject(error);
+      }
+      
+      // Token hết hạn hoặc không hợp lệ
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // Chỉ redirect nếu không phải đang ở trang login
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/login')) {
+        // Sử dụng history.push thay vì window.location để tránh reload
+        if (window.history && window.history.pushState) {
+          window.history.pushState(null, '', '/login');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        } else {
+          window.location.href = '/login';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+

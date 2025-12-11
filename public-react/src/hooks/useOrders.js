@@ -9,13 +9,16 @@ export const useOrders = (filters = {}) => {
     queryFn: async () => {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value);
+        if (value !== undefined && value !== null && value !== '') params.append(key, value);
       });
       const queryString = params.toString();
       const url = `/api/orders${queryString ? `?${queryString}` : ''}`;
       const response = await api.get(url);
       if (response.data.success) {
-        return response.data.data;
+        return {
+          data: response.data.data,
+          pagination: response.data.pagination || null
+        };
       }
       throw new Error(response.data.message || 'Failed to fetch orders');
     },

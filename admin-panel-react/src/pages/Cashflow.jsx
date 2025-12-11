@@ -188,6 +188,7 @@ function Cashflow() {
   const summary = useMemo(() => {
     const totals = {
       totalAmount: 0,
+      paintingRevenue: 0,
       depositAmount: 0,
       cod: 0,
       shippingCharge: 0,
@@ -205,11 +206,13 @@ function Cashflow() {
       const totalAmount = Number(order.totalAmount || 0);
       const depositAmount = Number(order.depositAmount || 0);
       const cod = Number(order.cod || 0);
+      const paintingRevenue = Number(order.paintingPrice || 0);
       const shippingInstallationPrice = Number(order.shippingInstallationPrice || 0);
       const shippingExternalCost = Number(order.shippingExternalCost || 0);
       const actualReceived = calculateActualReceived(order);
 
       totals.totalAmount += totalAmount;
+      totals.paintingRevenue += paintingRevenue;
       totals.depositAmount += depositAmount;
       totals.cod += cod;
       totals.shippingCharge += shippingInstallationPrice;
@@ -229,8 +232,8 @@ function Cashflow() {
       }
     });
 
-    // Công nợ: Tổng đơn - Thực nhận + Cọc (theo yêu cầu)
-    totals.debt = totals.totalAmount - totals.actualReceived + totals.depositAmount;
+    // Công nợ mới: Tổng đơn - (Thực nhận + Cọc)
+    totals.debt = totals.totalAmount - (totals.actualReceived + totals.depositAmount);
     return totals;
   }, [filteredOrders]);
 
@@ -356,18 +359,19 @@ function Cashflow() {
             <div className="col-lg-3 col-md-6">
               <div className="card shadow-sm h-100">
                 <div className="card-body">
-                  <div className="text-muted small">Tổng tiền đơn</div>
+                  <div className="text-muted small">Doanh thu (tổng tiền đơn)</div>
                   <h5 className="mb-1">{formatCurrency(summary.totalAmount)}</h5>
                   <div className="small text-success">Hoàn thành: {formatCurrency(summary.completedAmount)}</div>
                   <div className="small text-warning">Chưa hoàn thành: {formatCurrency(summary.incompleteAmount)}</div>
+                  <div className="small text-primary mt-1">Doanh số (tiền tranh): <strong>{formatCurrency(summary.paintingRevenue)}</strong></div>
                 </div>
               </div>
             </div>
             <div className="col-lg-3 col-md-6">
               <div className="card shadow-sm h-100">
                 <div className="card-body">
-                  <div className="text-muted small">Tiền thực nhận</div>
-                  <h5 className="mb-1">{formatCurrency(summary.actualReceived)}</h5>
+                  <div className="text-muted small">Doanh số (tiền tranh)</div>
+                  <h5 className="mb-1">{formatCurrency(summary.paintingRevenue)}</h5>
                   <div className="small text-danger">Công nợ: {formatCurrency(summary.debt)}</div>
                   <div className="small text-secondary">Khách trả hàng: {formatCurrency(summary.returnedAmount)}</div>
                 </div>

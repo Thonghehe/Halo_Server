@@ -127,6 +127,12 @@ const orderSchema = new mongoose.Schema({
     default: 'chua_cat'
   },
 
+  // Có cọc hay không
+  hasDeposit: {
+    type: Boolean,
+    default: false
+  },
+
   // Ảnh cọc đơn hàng
   depositImages: [{
     type: String

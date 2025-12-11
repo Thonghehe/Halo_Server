@@ -47,6 +47,7 @@ function EditOrder() {
         orderType: o.orderType || 'thuong',
         note: o.note || '',
         noteMentions: o.noteMentions ? o.noteMentions.map(m => m.user?._id || m.user).filter(Boolean) : [],
+        hasDeposit: o.hasDeposit !== undefined ? o.hasDeposit : (o.depositAmount > 0 || (o.depositImages && o.depositImages.length > 0)),
         depositAmount: o.depositAmount || 0,
         totalAmount: o.totalAmount || 0,
         paintingPrice: o.paintingPrice || 0,
@@ -923,6 +924,17 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
       alert('Vui lòng chọn hình thức gửi đơn');
     return false;
   }
+    // Validation cho cọc: nếu có cọc thì phải có ảnh/file và số tiền cọc
+    if (formData.hasDeposit) {
+      if (!formData.depositImages || formData.depositImages.length === 0) {
+        alert('Vui lòng upload ít nhất một ảnh hoặc file cọc');
+        return false;
+      }
+      if (!formData.depositAmount || formData.depositAmount <= 0) {
+        alert('Vui lòng nhập số tiền cọc');
+        return false;
+      }
+    }
     return true;
   };
 
@@ -936,6 +948,7 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
         customerPhone: formData.customerPhone,
         orderType: formData.orderType,
         note: formData.note,
+        hasDeposit: formData.hasDeposit || false,
         depositImages: formData.depositImages || [],
         depositAmount: Number(formData.depositAmount) || 0
       };
@@ -1078,307 +1091,6 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
                 </select>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Thông tin giá */}
-        <div className="card mb-4">
-          <div className="card-body">
-            <h5 className="form-section-title">Thông tin giá</h5>
-            {formData.orderType === 'shopee' ? (
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <label className="form-label">Tổng giá trị đơn hàng *</label>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="form-control"
-                      name="totalAmount"
-                      value={formatCurrency(formData.totalAmount)}
-                      onChange={(e) => handleCurrencyChange('totalAmount', e.target.value)}
-                      placeholder="0"
-                      required
-                    />
-                    <span className="input-group-text">VNĐ</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <label className="form-label">Tiền tranh *</label>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="form-control"
-                      name="paintingPrice"
-                      value={formatCurrency(formData.paintingPrice)}
-                      onChange={(e) => handlePriceChange('paintingPrice', e.target.value)}
-                      placeholder="0"
-                      required
-                    />
-                    <span className="input-group-text">VNĐ</span>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Tiền thi công (nếu có)</label>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="form-control"
-                      name="constructionPrice"
-                      value={formatCurrency(formData.constructionPrice)}
-                      onChange={(e) => handlePriceChange('constructionPrice', e.target.value)}
-                      placeholder="0"
-                    />
-                    <span className="input-group-text">VNĐ</span>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Tiền thiết kế (nếu có)</label>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="form-control"
-                      name="designFee"
-                      value={formatCurrency(formData.designFee)}
-                      onChange={(e) => handlePriceChange('designFee', e.target.value)}
-                      placeholder="0"
-                    />
-                    <span className="input-group-text">VNĐ</span>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Phí phát sinh (nếu có)</label>
-                  <input
-                    type="text"
-                    className="form-control mb-2"
-                    placeholder="Tên phí phát sinh"
-                    value={formData.extraFeeName}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        extraFeeName: e.target.value
-                      }))
-                    }
-                    disabled={(formData.extraFeeAmount || 0) <= 0}
-                  />
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="form-control"
-                      name="extraFeeAmount"
-                      value={formatCurrency(formData.extraFeeAmount)}
-                      onChange={(e) => handlePriceChange('extraFeeAmount', e.target.value)}
-                      placeholder="0"
-                    />
-                    <span className="input-group-text">VNĐ</span>
-                  </div>
-                  <small className="text-muted">Bắt buộc nhập tên khi có phí phát sinh</small>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">VAT (8%)</label>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={formatCurrency(formData.vat)}
-                      disabled
-                      readOnly
-                    />
-                    <span className="input-group-text">VNĐ</span>
-                  </div>
-                  <div className="form-check mt-2">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={formData.includeVat}
-                      onChange={(e) => {
-                        setFormData(prev => {
-                          const updated = { ...prev, includeVat: e.target.checked };
-                          const subtotal =
-                            (updated.paintingPrice || 0) +
-                            (updated.constructionPrice || 0) +
-                            (updated.designFee || 0) +
-                            (updated.extraFeeAmount || 0) +
-                            (updated.customerPaysShipping ? (updated.shippingInstallationPrice || 0) : 0);
-                          const vat = updated.includeVat ? Math.round(subtotal * 0.08) : 0;
-                          const totalAmount = Math.round(subtotal + vat);
-                          return { ...updated, vat, totalAmount };
-                        });
-                      }}
-                      id="includeVat"
-                    />
-                    <label className="form-check-label" htmlFor="includeVat">
-                      Tính VAT
-                    </label>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Tổng giá trị đơn hàng *</label>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={formatCurrency(formData.totalAmount)}
-                      disabled
-                      readOnly
-                    />
-                    <span className="input-group-text">VNĐ</span>
-                  </div>
-                  <small className="text-muted">Tự động tính</small>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Hình thức gửi đơn */}
-        <div className="card mb-4">
-          <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="form-section-title mb-0">Hình thức gửi đơn</h5>
-              <div className="form-check form-switch">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="editEnableShippingInfo"
-                  checked={shippingInfoEnabled}
-                  onChange={(e) => handleToggleShippingInfo(e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="editEnableShippingInfo">
-                  Nhập thông tin gửi đi
-                </label>
-              </div>
-            </div>
-            {!shippingInfoEnabled ? (
-              <p className="text-muted mb-0">
-                Bỏ trống để kế toán điều đơn ghi thông tin giao hàng sau hoặc giữ nguyên thông tin hiện tại.
-              </p>
-            ) : (
-              <>
-                <div className="row g-3">
-                <div className="col-md-6">
-                    <label className="form-label">Chọn hình thức gửi</label>
-                  <select
-                    className="form-select"
-                    value={formData.shippingMethod}
-                      onChange={(e) => handleShippingMethodChange(e.target.value)}
-                  >
-                    <option value="">Chưa cập nhật</option>
-                    <option value="viettel">Viettel Post</option>
-                    <option value="ship_ngoai">Ship ngoài</option>
-                    <option value="khach_den_nhan">Khách đến nhận</option>
-                    <option value="di_treo_cho_khach">Đi treo cho khách</option>
-                  </select>
-                </div>
-                {formData.shippingMethod === 'viettel' && (
-                  <div className="col-md-6">
-                      <label className="form-label">Mã đơn vận</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={formData.shippingTrackingCode}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            shippingTrackingCode: e.target.value
-                          }))
-                        }
-                      placeholder="Nhập mã vận đơn"
-                    />
-                  </div>
-                )}
-                  {formData.shippingMethod === 'ship_ngoai' && (
-                    <div className="col-12">
-                      <label className="form-label">Thông tin ship</label>
-                      <textarea
-                        className="form-control"
-                        rows="2"
-                        value={formData.shippingExternalInfo || ''}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            shippingExternalInfo: e.target.value
-                          }))
-                        }
-                        placeholder="Tên đơn vị ship, người liên hệ, ghi chú..."
-                      ></textarea>
-                    </div>
-                  )}
-                  {formData.shippingMethod === 'khach_den_nhan' && (
-                    <div className="col-12">
-                      <div className="alert alert-info mb-0">
-                        Khách sẽ đến nhận hàng trực tiếp, không cần nhập thêm thông tin.
-                      </div>
-                    </div>
-                  )}
-                  {formData.shippingMethod === 'di_treo_cho_khach' && (
-                    <div className="col-12">
-                      <div className="alert alert-info mb-0">
-                       Đi treo tranh trực tiếp tại địa chỉ khách hàng.
-                      </div>
-                    </div>
-                  )}
-                {formData.shippingMethod !== 'khach_den_nhan' && (
-                  <>
-                    <div className="col-md-6">
-                      <label className="form-label">Vận chuyển & lắp đặt</label>
-                      <div className="input-group">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          className="form-control"
-                          name="shippingInstallationPrice"
-                          value={formatCurrency(formData.shippingInstallationPrice)}
-                          onChange={(e) => handlePriceChange('shippingInstallationPrice', e.target.value)}
-                          placeholder="0"
-                        />
-                        <span className="input-group-text">VNĐ</span>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-check mt-4">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="customerPaysShipping"
-                          checked={formData.customerPaysShipping}
-                          onChange={(e) => {
-                            setFormData(prev => {
-                              const updated = { ...prev, customerPaysShipping: e.target.checked };
-                              const subtotal =
-                                (updated.paintingPrice || 0) +
-                                (updated.constructionPrice || 0) +
-                                (updated.designFee || 0) +
-                                (updated.extraFeeAmount || 0) +
-                                (updated.customerPaysShipping ? (updated.shippingInstallationPrice || 0) : 0);
-                              const vat = updated.includeVat ? Math.round(subtotal * 0.08) : 0;
-                              const totalAmount = Math.round(subtotal + vat);
-                              return { ...updated, vat, totalAmount };
-                            });
-                          }}
-                        />
-                        <label className="form-check-label" htmlFor="customerPaysShipping">
-                          Khách chịu
-                        </label>
-                      </div>
-                      <small className="text-muted d-block mt-1">
-                        {formData.customerPaysShipping 
-                          ? 'Vận chuyển & lắp đặt sẽ tính vào tổng tiền đơn hàng'
-                          : 'Vận chuyển & lắp đặt là tiền riêng, không ảnh hưởng tổng tiền'}
-                      </small>
-                    </div>
-                  </>
-                )}
-              </div>
-              </>
-            )}
           </div>
         </div>
 
@@ -1756,6 +1468,293 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
           </div>
         </div>
 
+        {/* Thông tin giá */}
+        <div className="card mb-4">
+          <div className="card-body">
+            <h5 className="form-section-title">Thông tin giá</h5>
+            {formData.orderType === 'shopee' ? (
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label">Tổng giá trị đơn hàng *</label>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="form-control"
+                      name="totalAmount"
+                      value={formatCurrency(formData.totalAmount)}
+                      onChange={(e) => handleCurrencyChange('totalAmount', e.target.value)}
+                      placeholder="0"
+                      required
+                    />
+                    <span className="input-group-text">VNĐ</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label">Tiền tranh *</label>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="form-control"
+                      name="paintingPrice"
+                      value={formatCurrency(formData.paintingPrice)}
+                      onChange={(e) => handlePriceChange('paintingPrice', e.target.value)}
+                      placeholder="0"
+                      required
+                    />
+                    <span className="input-group-text">VNĐ</span>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Tiền thi công (nếu có)</label>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="form-control"
+                      name="constructionPrice"
+                      value={formatCurrency(formData.constructionPrice)}
+                      onChange={(e) => handlePriceChange('constructionPrice', e.target.value)}
+                      placeholder="0"
+                    />
+                    <span className="input-group-text">VNĐ</span>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Tiền thiết kế (nếu có)</label>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="form-control"
+                      name="designFee"
+                      value={formatCurrency(formData.designFee)}
+                      onChange={(e) => handlePriceChange('designFee', e.target.value)}
+                      placeholder="0"
+                    />
+                    <span className="input-group-text">VNĐ</span>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Phí phát sinh (nếu có)</label>
+                  <input
+                    type="text"
+                    className="form-control mb-2"
+                    placeholder="Tên phí phát sinh"
+                    value={formData.extraFeeName}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        extraFeeName: e.target.value
+                      }))
+                    }
+                    disabled={(formData.extraFeeAmount || 0) <= 0}
+                  />
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="form-control"
+                      name="extraFeeAmount"
+                      value={formatCurrency(formData.extraFeeAmount)}
+                      onChange={(e) => handlePriceChange('extraFeeAmount', e.target.value)}
+                      placeholder="0"
+                    />
+                    <span className="input-group-text">VNĐ</span>
+                  </div>
+                  <small className="text-muted">Bắt buộc nhập tên khi có phí phát sinh</small>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">VAT (8%)</label>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={formatCurrency(formData.vat)}
+                      disabled
+                      readOnly
+                    />
+                    <span className="input-group-text">VNĐ</span>
+                  </div>
+                  <div className="form-check mt-2">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={formData.includeVat}
+                      onChange={(e) => {
+                        setFormData(prev => {
+                          const updated = { ...prev, includeVat: e.target.checked };
+                          const subtotal =
+                            (updated.paintingPrice || 0) +
+                            (updated.constructionPrice || 0) +
+                            (updated.designFee || 0) +
+                            (updated.extraFeeAmount || 0) +
+                            (updated.customerPaysShipping ? (updated.shippingInstallationPrice || 0) : 0);
+                          const vat = updated.includeVat ? Math.round(subtotal * 0.08) : 0;
+                          const totalAmount = Math.round(subtotal + vat);
+                          return { ...updated, vat, totalAmount };
+                        });
+                      }}
+                      id="includeVat"
+                    />
+                    <label className="form-check-label" htmlFor="includeVat">
+                      Tính VAT
+                    </label>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Tổng giá trị đơn hàng *</label>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={formatCurrency(formData.totalAmount)}
+                      disabled
+                      readOnly
+                    />
+                    <span className="input-group-text">VNĐ</span>
+                  </div>
+                  <small className="text-muted">Tự động tính</small>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="card mb-4">
+          <div className="card-body">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="form-section-title mb-0">Thông tin cọc</h5>
+              <div className="form-check form-switch">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="adminEditHasDeposit"
+                  checked={formData.hasDeposit || false}
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      hasDeposit: e.target.checked,
+                      // Reset về 0 nếu bỏ check
+                      depositAmount: e.target.checked ? prev.depositAmount : 0,
+                      depositImages: e.target.checked ? prev.depositImages : []
+                    }));
+                  }}
+                />
+                <label className="form-check-label" htmlFor="adminEditHasDeposit">
+                  Có cọc
+                </label>
+              </div>
+            </div>
+            {formData.hasDeposit ? (
+              <>
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Tiền cọc *</label>
+                <div className="input-group">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="form-control"
+                    name="depositAmount"
+                    value={formatCurrency(formData.depositAmount)}
+                    onChange={(e) => handleCurrencyChange('depositAmount', e.target.value)}
+                    placeholder="0"
+                  />
+                  <span className="input-group-text">VNĐ</span>
+                </div>
+              </div>
+              <div className="col-md-6 d-flex align-items-end">
+                <div className="w-100">
+                  <label className="form-label">COD</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={`${Math.max(Number(formData.totalAmount || 0) - Number(formData.depositAmount || 0), 0).toLocaleString('vi-VN')} VNĐ`}
+                    disabled
+                    readOnly
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Upload ảnh cọc *</label>
+              <div
+                className={`drop-zone ${dragOver.deposit ? 'drag-over' : ''}`}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(prev => ({ ...prev, deposit: true })); }}
+                onDragLeave={(e) => { e.preventDefault(); setDragOver(prev => ({ ...prev, deposit: false })); }}
+                onDrop={(e) => { 
+                  e.preventDefault(); 
+                  setDragOver(prev => ({ ...prev, deposit: false })); 
+                  const files = e.dataTransfer.files; 
+                  if (files && files.length) {
+                    handleUploadDepositImage(files);
+                  }
+                }}
+                onPaste={(e) => handlePaste(e, 'deposit')}
+                onClick={(e) => {
+                  if (e.target.tagName !== 'INPUT') {
+                    e.currentTarget.focus();
+                  }
+                }}
+                tabIndex={0}
+              >
+                <input 
+                  type="file" 
+                  className="form-control" 
+                  accept="image/*" 
+                  multiple
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      handleUploadDepositImage(e.target.files);
+                    }
+                  }} 
+                  disabled={uploadingDeposit} 
+                />
+                <small className="text-muted d-block mt-1">
+                  Kéo thả ảnh vào đây hoặc paste từ clipboard (có thể chọn nhiều ảnh)
+                </small>
+              </div>
+              {uploadingDeposit && (
+                <small className="text-muted">Đang upload...</small>
+              )}
+              {formData.depositImages && formData.depositImages.length > 0 && (
+                <div className="mt-2">
+                  <h6>Ảnh đã upload ({formData.depositImages.length}):</h6>
+                  <div className="d-flex flex-wrap gap-2">
+                    {formData.depositImages.map((image, index) => (
+                      <div key={index} className="position-relative d-inline-block">
+                        <img 
+                          src={getImageUrl(image, 'deposits')} 
+                          alt={`Cọc ${index + 1}`} 
+                          className="img-thumbnail" 
+                          style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover' }} 
+                        />
+                        <button 
+                          type="button" 
+                          className="btn btn-sm btn-danger position-absolute" 
+                          style={{ top: 4, right: 4 }} 
+                          onClick={() => handleRemoveDepositImage(index)}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+              </>
+            ) : (
+              <p className="text-muted mb-0">Bỏ trống nếu đơn hàng không có cọc.</p>
+            )}
+          </div>
+        </div>
+
         {/* Ăn chia */}
         {formData.orderType !== 'shopee' && (
           <div className="card mb-4">
@@ -1873,105 +1872,147 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
           </div>
         )}
 
+        {/* Hình thức gửi đơn */}
         <div className="card mb-4">
           <div className="card-body">
-            <h5 className="form-section-title">Thông tin cọc (Nếu có)</h5>
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <label className="form-label">Tiền cọc</label>
-                <div className="input-group">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className="form-control"
-                    name="depositAmount"
-                    value={formatCurrency(formData.depositAmount)}
-                    onChange={(e) => handleCurrencyChange('depositAmount', e.target.value)}
-                    placeholder="0"
-                  />
-                  <span className="input-group-text">VNĐ</span>
-                </div>
-              </div>
-              <div className="col-md-6 d-flex align-items-end">
-                <div className="w-100">
-                  <label className="form-label">COD</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={`${Math.max(Number(formData.totalAmount || 0) - Number(formData.depositAmount || 0), 0).toLocaleString('vi-VN')} VNĐ`}
-                    disabled
-                    readOnly
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Upload ảnh cọc</label>
-              <div
-                className={`drop-zone ${dragOver.deposit ? 'drag-over' : ''}`}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(prev => ({ ...prev, deposit: true })); }}
-                onDragLeave={(e) => { e.preventDefault(); setDragOver(prev => ({ ...prev, deposit: false })); }}
-                onDrop={(e) => { 
-                  e.preventDefault(); 
-                  setDragOver(prev => ({ ...prev, deposit: false })); 
-                  const files = e.dataTransfer.files; 
-                  if (files && files.length) {
-                    handleUploadDepositImage(files);
-                  }
-                }}
-                onPaste={(e) => handlePaste(e, 'deposit')}
-                onClick={(e) => {
-                  if (e.target.tagName !== 'INPUT') {
-                    e.currentTarget.focus();
-                  }
-                }}
-                tabIndex={0}
-              >
-                <input 
-                  type="file" 
-                  className="form-control" 
-                  accept="image/*" 
-                  multiple
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      handleUploadDepositImage(e.target.files);
-                    }
-                  }} 
-                  disabled={uploadingDeposit} 
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="form-section-title mb-0">Hình thức gửi đơn</h5>
+              <div className="form-check form-switch">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="editEnableShippingInfo"
+                  checked={shippingInfoEnabled}
+                  onChange={(e) => handleToggleShippingInfo(e.target.checked)}
                 />
-                <small className="text-muted d-block mt-1">
-                  Kéo thả ảnh vào đây hoặc paste từ clipboard (có thể chọn nhiều ảnh)
-                </small>
+                <label className="form-check-label" htmlFor="editEnableShippingInfo">
+                  Nhập thông tin gửi đi
+                </label>
               </div>
-              {uploadingDeposit && (
-                <small className="text-muted">Đang upload...</small>
-              )}
-              {formData.depositImages && formData.depositImages.length > 0 && (
-                <div className="mt-2">
-                  <h6>Ảnh đã upload ({formData.depositImages.length}):</h6>
-                  <div className="d-flex flex-wrap gap-2">
-                    {formData.depositImages.map((image, index) => (
-                      <div key={index} className="position-relative d-inline-block">
-                        <img 
-                          src={getImageUrl(image, 'deposits')} 
-                          alt={`Cọc ${index + 1}`} 
-                          className="img-thumbnail" 
-                          style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover' }} 
-                        />
-                        <button 
-                          type="button" 
-                          className="btn btn-sm btn-danger position-absolute" 
-                          style={{ top: 4, right: 4 }} 
-                          onClick={() => handleRemoveDepositImage(index)}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
+            {!shippingInfoEnabled ? (
+              <p className="text-muted mb-0">
+                Bỏ trống để kế toán điều đơn ghi thông tin giao hàng sau hoặc giữ nguyên thông tin hiện tại.
+              </p>
+            ) : (
+              <>
+                <div className="row g-3">
+                <div className="col-md-6">
+                    <label className="form-label">Chọn hình thức gửi</label>
+                  <select
+                    className="form-select"
+                    value={formData.shippingMethod}
+                      onChange={(e) => handleShippingMethodChange(e.target.value)}
+                  >
+                    <option value="">Chưa cập nhật</option>
+                    <option value="viettel">Viettel Post</option>
+                    <option value="ship_ngoai">Ship ngoài</option>
+                    <option value="khach_den_nhan">Khách đến nhận</option>
+                    <option value="di_treo_cho_khach">Đi treo cho khách</option>
+                  </select>
+                </div>
+                {formData.shippingMethod === 'viettel' && (
+                  <div className="col-md-6">
+                      <label className="form-label">Mã đơn vận</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={formData.shippingTrackingCode}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            shippingTrackingCode: e.target.value
+                          }))
+                        }
+                      placeholder="Nhập mã vận đơn"
+                    />
+                  </div>
+                )}
+                  {formData.shippingMethod === 'ship_ngoai' && (
+                    <div className="col-12">
+                      <label className="form-label">Thông tin ship</label>
+                      <textarea
+                        className="form-control"
+                        rows="2"
+                        value={formData.shippingExternalInfo || ''}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            shippingExternalInfo: e.target.value
+                          }))
+                        }
+                        placeholder="Tên đơn vị ship, người liên hệ, ghi chú..."
+                      ></textarea>
+                    </div>
+                  )}
+                  {formData.shippingMethod === 'khach_den_nhan' && (
+                    <div className="col-12">
+                      <div className="alert alert-info mb-0">
+                        Khách sẽ đến nhận hàng trực tiếp, không cần nhập thêm thông tin.
+                      </div>
+                    </div>
+                  )}
+                  {formData.shippingMethod === 'di_treo_cho_khach' && (
+                    <div className="col-12">
+                      <div className="alert alert-info mb-0">
+                       Đi treo tranh trực tiếp tại địa chỉ khách hàng.
+                      </div>
+                    </div>
+                  )}
+                {formData.shippingMethod !== 'khach_den_nhan' && (
+                  <>
+                    <div className="col-md-6">
+                      <label className="form-label">Vận chuyển & lắp đặt</label>
+                      <div className="input-group">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          className="form-control"
+                          name="shippingInstallationPrice"
+                          value={formatCurrency(formData.shippingInstallationPrice)}
+                          onChange={(e) => handlePriceChange('shippingInstallationPrice', e.target.value)}
+                          placeholder="0"
+                        />
+                        <span className="input-group-text">VNĐ</span>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-check mt-4">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="customerPaysShipping"
+                          checked={formData.customerPaysShipping}
+                          onChange={(e) => {
+                            setFormData(prev => {
+                              const updated = { ...prev, customerPaysShipping: e.target.checked };
+                              const subtotal =
+                                (updated.paintingPrice || 0) +
+                                (updated.constructionPrice || 0) +
+                                (updated.designFee || 0) +
+                                (updated.extraFeeAmount || 0) +
+                                (updated.customerPaysShipping ? (updated.shippingInstallationPrice || 0) : 0);
+                              const vat = updated.includeVat ? Math.round(subtotal * 0.08) : 0;
+                              const totalAmount = Math.round(subtotal + vat);
+                              return { ...updated, vat, totalAmount };
+                            });
+                          }}
+                        />
+                        <label className="form-check-label" htmlFor="customerPaysShipping">
+                          Khách chịu
+                        </label>
+                      </div>
+                      <small className="text-muted d-block mt-1">
+                        {formData.customerPaysShipping 
+                          ? 'Vận chuyển & lắp đặt sẽ tính vào tổng tiền đơn hàng'
+                          : 'Vận chuyển & lắp đặt là tiền riêng, không ảnh hưởng tổng tiền'}
+                      </small>
+                    </div>
+                  </>
+                )}
+              </div>
+              </>
+            )}
           </div>
         </div>
 

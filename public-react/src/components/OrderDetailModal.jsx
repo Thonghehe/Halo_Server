@@ -667,9 +667,6 @@ function OrderDetailModal({ orderId, show, onClose, onOrderUpdated }) {
                 {/* Order Header */}
                 <OrderHeader order={displayOrder || order} shouldHideMoneyFields={shouldHideMoneyFields} />
 
-                {/* Cost Breakdown */}
-                <OrderCostBreakdown order={displayOrder || order} shouldHideMoneyFields={shouldHideMoneyFields} />
-
                 {/* Paintings List */}
                 {(displayOrder || order).paintings && (displayOrder || order).paintings.length > 0 && (
                   <OrderPaintingsList
@@ -685,6 +682,9 @@ function OrderDetailModal({ orderId, show, onClose, onOrderUpdated }) {
                     }}
                   />
                 )}
+
+                {/* Cost Breakdown */}
+                <OrderCostBreakdown order={displayOrder || order} shouldHideMoneyFields={shouldHideMoneyFields} />
 
                 {/* Deposit Section */}
                 {!shouldHideMoneyFields && order.depositAmount && (
@@ -741,7 +741,10 @@ function OrderDetailModal({ orderId, show, onClose, onOrderUpdated }) {
                       <span>Ghi chú</span>
                     </h6>
                     {order.note ? (
-                      <p className="text-muted mb-2" style={{ whiteSpace: 'pre-wrap' }}>
+                      <p
+                        className="text-muted mb-2 fw-semibold"
+                        style={{ whiteSpace: 'pre-wrap', fontSize: '1.05rem', lineHeight: 1.6 }}
+                      >
                         {order.note}
                       </p>
                     ) : (

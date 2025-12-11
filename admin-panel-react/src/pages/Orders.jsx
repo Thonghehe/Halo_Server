@@ -26,7 +26,7 @@ function Orders() {
   const [pageLoading, setPageLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(100);
   const [pagination, setPagination] = useState({ page: 1, limit: 100, total: 0, pages: 1 });
@@ -173,7 +173,6 @@ function Orders() {
     const updateIsMobile = () => {
       const mobile = window.innerWidth <= 991;
       setIsMobile(mobile);
-      setShowFilters(!mobile); // desktop: mở sẵn, mobile/tablet: ẩn mặc định
     };
     updateIsMobile();
     window.addEventListener('resize', updateIsMobile);
@@ -606,11 +605,11 @@ function Orders() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Search */}
       <div className="card mb-4">
         <div className="card-body">
           <div className="row g-3">
-            <div className="col-12 col-md-3">
+            <div className="col-12 col-md-11">
               <label className="form-label">Tìm kiếm</label>
               <input
                 type="text"
@@ -621,6 +620,25 @@ function Orders() {
                 onKeyDown={onKeyDownSearch}
               />
             </div>
+            <div className="col-12 col-md-1 d-flex align-items-end">
+              <button
+                type="button"
+                className={`btn w-100 ${showFilters ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setShowFilters(!showFilters)}
+                title={showFilters ? 'Ẩn bộ lọc' : 'Hiện bộ lọc'}
+              >
+                <i className="bi bi-funnel"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      {showFilters && (
+        <div className="card mb-4">
+          <div className="card-body">
+            <div className="row g-3">
             <div className="col-12 col-md-3">
               <label className="form-label">Trạng thái</label>
               <select
@@ -784,7 +802,8 @@ function Orders() {
             )}
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Table - Desktop View */}
       <div className="card order-table-desktop">

@@ -204,14 +204,9 @@ function Cashflow() {
           return false;
         }
       }
-      // Nếu lọc trạng thái hoàn thành, dùng mốc thời gian hoàn thành (completedAt) để lọc theo ngày
-      const dateRefRaw =
-        filters.status === 'hoan_thanh'
-          ? (order?.completedAt || order?.updatedAt || order?.createdAt)
-          : order?.createdAt;
-      const dateRef = dateRefRaw ? new Date(dateRefRaw) : null;
-      if (start && dateRef && dateRef < start) return false;
-      if (end && dateRef && dateRef > end) return false;
+      const created = order?.createdAt ? new Date(order.createdAt) : null;
+      if (start && created && created < start) return false;
+      if (end && created && created > end) return false;
 
       if (filters.status === 'hoan_thanh' && order.status !== 'hoan_thanh') return false;
       if (filters.status === 'chua_hoan_thanh' && ['hoan_thanh', 'huy'].includes(order.status)) return false;

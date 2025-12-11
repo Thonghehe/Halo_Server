@@ -47,18 +47,17 @@ export const getOrders = async (query = {}) => {
     if (createdBy) filter.createdBy = createdBy;
 
     if (startDate || endDate) {
-      filter.actualCompletionDate = {};
+      filter.createdAt = {};
       if (startDate) {
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
-        filter.actualCompletionDate.$gte = start;
+        filter.createdAt.$gte = start;
       }
       if (endDate) {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
-        filter.actualCompletionDate.$lte = end;
+        filter.createdAt.$lte = end;
       }
-      filter.actualCompletionDate.$exists = true;
     }
 
     if (search) {

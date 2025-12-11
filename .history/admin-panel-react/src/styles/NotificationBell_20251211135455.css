@@ -23,29 +23,15 @@
   right: 0;
   background: #dc3545;
   color: white;
-  border-radius: 999px;
-  min-width: 20px;
+  border-radius: 50%;
+  width: 20px;
   height: 20px;
-  padding: 0 6px;
   font-size: 0.7rem;
-  font-weight: 700;
-  line-height: 20px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: translate(35%, -35%);
-  box-shadow: 0 0 0 2px white;
-}
-
-.notification-dot {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 10px;
-  height: 10px;
-  background: #dc3545;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px white;
+  transform: translate(25%, -25%);
 }
 
 .notification-dropdown {
@@ -55,7 +41,7 @@
   width: 380px;
   max-width: calc(100vw - 20px);
   background: white;
-  border-radius: 0;
+  border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   max-height: min(500px, 70vh);

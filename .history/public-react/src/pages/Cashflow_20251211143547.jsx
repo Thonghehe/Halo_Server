@@ -86,30 +86,6 @@ const calculateActualReceived = (order) => {
   return fallback > 0 ? fallback : 0;
 };
 
-const getStatusBadgeClass = (status) => {
-  const classes = {
-    moi_tao: 'bg-secondary text-white',
-    dang_xu_ly: 'bg-warning text-dark',
-    cho_san_xuat: 'bg-warning text-dark',
-    da_vao_khung: 'bg-info text-white',
-    cho_dong_goi: 'bg-info text-white',
-    da_dong_goi: 'bg-info text-white',
-    cho_dieu_don: 'bg-info text-white',
-    da_gui_di: 'bg-info text-white',
-    hoan_thanh: 'bg-success text-white',
-    khach_tra_hang: 'bg-danger text-white',
-    huy: 'bg-danger text-white',
-  };
-  return classes[status] || 'bg-secondary text-white';
-};
-
-const escapeCsv = (value) => {
-  const str = value === null || value === undefined ? '' : String(value);
-  return `"${str.replace(/"/g, '""')}"`;
-};
-
-const CSV_DELIMITER = ';';
-
 function Cashflow() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
@@ -204,14 +180,9 @@ function Cashflow() {
           return false;
         }
       }
-      // Nếu lọc trạng thái hoàn thành, dùng mốc thời gian hoàn thành (completedAt) để lọc theo ngày
-      const dateRefRaw =
-        filters.status === 'hoan_thanh'
-          ? (order?.completedAt || order?.updatedAt || order?.createdAt)
-          : order?.createdAt;
-      const dateRef = dateRefRaw ? new Date(dateRefRaw) : null;
-      if (start && dateRef && dateRef < start) return false;
-      if (end && dateRef && dateRef > end) return false;
+      const created = order?.createdAt ? new Date(order.createdAt) : null;
+      if (start && created && created < start) return false;
+      if (end && created && created > end) return false;
 
       if (filters.status === 'hoan_thanh' && order.status !== 'hoan_thanh') return false;
       if (filters.status === 'chua_hoan_thanh' && ['hoan_thanh', 'huy'].includes(order.status)) return false;
@@ -237,24 +208,14 @@ function Cashflow() {
       externalShippingCost: 0,
       actualReceived: 0,
       returnedAmount: 0,
-      cancelledAmount: 0,
       completedAmount: 0,
       incompleteAmount: 0,
       completedCount: 0,
       incompleteCount: 0,
-      cancelledCount: 0,
       totalCount: filteredOrders.length,
     };
 
     filteredOrders.forEach((order) => {
-      // Không cộng doanh thu/doanh số cho đơn đã hủy
-      if (order.status === 'huy') {
-        const totalAmount = Number(order.totalAmount || 0);
-        totals.cancelledAmount += totalAmount;
-        totals.cancelledCount += 1;
-        return;
-      }
-
       const totalAmount = Number(order.totalAmount || 0);
       const depositAmount = Number(order.depositAmount || 0);
       const cod = Number(order.cod || 0);
@@ -288,55 +249,6 @@ function Cashflow() {
     totals.debt = totals.totalAmount - (totals.actualReceived + totals.depositAmount);
     return totals;
   }, [filteredOrders]);
-
-  const exportToCsv = () => {
-    const headers = [
-      'Mã đơn',
-      'Khách hàng',
-      'SĐT',
-      'Trạng thái',
-      'Tổng tiền',
-      'Cọc',
-      'COD',
-      'Thực nhận',
-      'Ship ngoài',
-      'Mã vận đơn',
-      'Người tạo',
-      'Ngày tạo',
-    ];
-
-    const rows = filteredOrders.map((order) => {
-      const actualReceived = calculateActualReceived(order);
-      return [
-        order.orderCode || '',
-        order.customerName || 'Khách lẻ',
-        order.customerPhone || '',
-        getVnStatusName(order.status),
-        Number(order.totalAmount || 0),
-        Number(order.depositAmount || 0),
-        Number(order.cod || 0),
-        Number(actualReceived || 0),
-        Number(order.shippingExternalCost || 0),
-        order.shippingTrackingCode || '',
-        order.createdBy?.fullName || order.createdBy?.email || '',
-        order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : '',
-      ];
-    });
-
-    // Excel trên Windows cần BOM để hiển thị tiếng Việt đúng
-    const BOM = '\uFEFF';
-    const csv = BOM + [headers, ...rows]
-      .map((row) => row.map(escapeCsv).join(CSV_DELIMITER))
-      .join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `cashflow_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   return (
     <div className="container-fluid orders-page">
@@ -388,16 +300,6 @@ function Cashflow() {
       <div className="card mb-3">
         <div className="card-body">
           <div className="row g-3">
-            <div className="col-md-3">
-              <label className="form-label mb-1">Tìm kiếm (Mã đơn / SĐT / Mã vận)</label>
-              <input
-                type="search"
-                className="form-control"
-                placeholder="Nhập mã đơn, SĐT hoặc mã vận"
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-              />
-            </div>
             <div className="col-md-3">
               <label className="form-label mb-1">Từ ngày</label>
               <input
@@ -464,7 +366,6 @@ function Cashflow() {
                   <h4 className="mb-1">{summary.totalCount}</h4>
                   <div className="small text-success">Hoàn thành: {summary.completedCount}</div>
                   <div className="small text-warning">Chưa hoàn thành: {summary.incompleteCount}</div>
-                  <div className="small text-danger">Đã hủy: {summary.cancelledCount}</div>
                 </div>
               </div>
             </div>
@@ -475,7 +376,6 @@ function Cashflow() {
                   <h5 className="mb-1">{formatCurrency(summary.totalAmount)}</h5>
                   <div className="small text-success">Hoàn thành: {formatCurrency(summary.completedAmount)}</div>
                   <div className="small text-warning">Chưa hoàn thành: {formatCurrency(summary.incompleteAmount)}</div>
-                  <div className="small text-danger">Đã hủy: {formatCurrency(summary.cancelledAmount)}</div>
                   <div className="small text-primary mt-1">Doanh số (tiền tranh): <strong>{formatCurrency(summary.paintingRevenue)}</strong></div>
                 </div>
               </div>
@@ -503,19 +403,10 @@ function Cashflow() {
             </div>
           </div>
 
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <div>
-              <span className="fw-semibold">Kết quả ({filteredOrders.length} đơn)</span>
-              <small className="text-muted ms-2">Hiển thị nhanh để kiểm tra chi tiết từng đơn</small>
-            </div>
-            <button type="button" className="btn btn-success btn-sm" onClick={exportToCsv}>
-              <i className="bi bi-download me-1"></i> Xuất CSV
-            </button>
-          </div>
-
           <div className="card">
-            <div className="card-header">
-              <div className="small text-muted">Chi tiết đơn theo bộ lọc</div>
+            <div className="card-header d-flex justify-content-between align-items-center">
+              <span>Kết quả ({filteredOrders.length} đơn)</span>
+              <small className="text-muted">Hiển thị nhanh để kiểm tra chi tiết từng đơn</small>
             </div>
             <div className="table-responsive">
               <table className="table align-middle mb-0">
@@ -542,7 +433,7 @@ function Cashflow() {
                         <div className="text-muted small">{order.customerPhone}</div>
                       </td>
                       <td>
-                        <span className={`badge ${getStatusBadgeClass(order.status)}`}>
+                        <span className="badge bg-light text-dark border">
                           {getVnStatusName(order.status)}
                         </span>
                       </td>

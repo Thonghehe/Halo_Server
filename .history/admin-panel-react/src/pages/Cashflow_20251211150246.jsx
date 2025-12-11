@@ -27,14 +27,15 @@ const buildQuickRange = (rangeKey) => {
       end.setHours(23, 59, 59, 999);
       break;
     }
-    case 'yesterday':
+    case 'yesterday': {
       start.setDate(now.getDate() - 1);
       end.setDate(now.getDate() - 1);
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
       break;
+    }
     case 'thisWeek': {
-      const day = now.getDay() === 0 ? 7 : now.getDay();
+      const day = now.getDay() === 0 ? 7 : now.getDay(); // Chủ nhật = 7
       start.setDate(now.getDate() - (day - 1));
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
@@ -48,21 +49,25 @@ const buildQuickRange = (rangeKey) => {
       start.setHours(0, 0, 0, 0);
       break;
     }
-    case 'thisMonth':
+    case 'thisMonth': {
       start.setDate(1);
       start.setHours(0, 0, 0, 0);
       end.setMonth(now.getMonth() + 1, 0);
       end.setHours(23, 59, 59, 999);
       break;
-    case 'lastMonth':
+    }
+    case 'lastMonth': {
       start.setMonth(now.getMonth() - 1, 1);
       start.setHours(0, 0, 0, 0);
-      end.setDate(0);
+      end.setDate(0); // ngày cuối tháng trước
       end.setHours(23, 59, 59, 999);
       break;
-    default:
+    }
+    default: {
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
+      break;
+    }
   }
 
   return {
@@ -144,6 +149,7 @@ function Cashflow() {
     setLoading(true);
     setError('');
     try {
+      // Lấy nhiều hơn để tính toán (tối đa 2000 đơn)
       const response = await api.get('/api/orders?limit=2000');
       if (response.data.success) {
         setOrders(response.data.data || []);
@@ -204,14 +210,9 @@ function Cashflow() {
           return false;
         }
       }
-      // Nếu lọc trạng thái hoàn thành, dùng mốc thời gian hoàn thành (completedAt) để lọc theo ngày
-      const dateRefRaw =
-        filters.status === 'hoan_thanh'
-          ? (order?.completedAt || order?.updatedAt || order?.createdAt)
-          : order?.createdAt;
-      const dateRef = dateRefRaw ? new Date(dateRefRaw) : null;
-      if (start && dateRef && dateRef < start) return false;
-      if (end && dateRef && dateRef > end) return false;
+      const created = order?.createdAt ? new Date(order.createdAt) : null;
+      if (start && created && created < start) return false;
+      if (end && created && created > end) return false;
 
       if (filters.status === 'hoan_thanh' && order.status !== 'hoan_thanh') return false;
       if (filters.status === 'chua_hoan_thanh' && ['hoan_thanh', 'huy'].includes(order.status)) return false;
@@ -503,19 +504,15 @@ function Cashflow() {
             </div>
           </div>
 
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <div>
-              <span className="fw-semibold">Kết quả ({filteredOrders.length} đơn)</span>
-              <small className="text-muted ms-2">Hiển thị nhanh để kiểm tra chi tiết từng đơn</small>
-            </div>
-            <button type="button" className="btn btn-success btn-sm" onClick={exportToCsv}>
-              <i className="bi bi-download me-1"></i> Xuất CSV
-            </button>
-          </div>
-
           <div className="card">
-            <div className="card-header">
-              <div className="small text-muted">Chi tiết đơn theo bộ lọc</div>
+            <div className="card-header d-flex justify-content-between align-items-center">
+              <div>
+                <span>Kết quả ({filteredOrders.length} đơn)</span>
+                <small className="text-muted ms-2">Hiển thị nhanh để kiểm tra chi tiết từng đơn</small>
+              </div>
+              <button type="button" className="btn btn-sm btn-outline-success" onClick={exportToCsv}>
+                <i className="bi bi-download"></i> Xuất CSV
+              </button>
             </div>
             <div className="table-responsive">
               <table className="table align-middle mb-0">

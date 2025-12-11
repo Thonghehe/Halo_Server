@@ -783,7 +783,7 @@ function Orders() {
             )}
           </div>
         </div>
-      </div>
+        </div>
       )}
 
       {/* Table - Desktop View */}
@@ -1026,7 +1026,7 @@ function Orders() {
                       </span>
                     </div>
                   </div>
-                  {showCreatorColumn && (
+                   {showCreatorColumn && (
                     <div className="order-card-field">
                       <div className="order-card-label">Người tạo</div>
                       <div className="order-card-value">{order.createdBy?.fullName || order.createdBy?.email || '-'}</div>
@@ -1038,8 +1038,8 @@ function Orders() {
                        <div className="order-card-value">
                          {formatCurrency(calculateActualReceived(order))}
                        </div>
-                    </div>
-                  )}
+                     </div>
+                   )}
                 </div>
                 {canEdit && !blocked && (
                   <div className="order-card-actions d-flex align-items-center gap-1" onClick={(e) => e.stopPropagation()}>

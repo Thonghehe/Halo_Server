@@ -108,8 +108,6 @@ const escapeCsv = (value) => {
   return `"${str.replace(/"/g, '""')}"`;
 };
 
-const CSV_DELIMITER = ';';
-
 function Cashflow() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
@@ -204,14 +202,9 @@ function Cashflow() {
           return false;
         }
       }
-      // Nếu lọc trạng thái hoàn thành, dùng mốc thời gian hoàn thành (completedAt) để lọc theo ngày
-      const dateRefRaw =
-        filters.status === 'hoan_thanh'
-          ? (order?.completedAt || order?.updatedAt || order?.createdAt)
-          : order?.createdAt;
-      const dateRef = dateRefRaw ? new Date(dateRefRaw) : null;
-      if (start && dateRef && dateRef < start) return false;
-      if (end && dateRef && dateRef > end) return false;
+      const created = order?.createdAt ? new Date(order.createdAt) : null;
+      if (start && created && created < start) return false;
+      if (end && created && created > end) return false;
 
       if (filters.status === 'hoan_thanh' && order.status !== 'hoan_thanh') return false;
       if (filters.status === 'chua_hoan_thanh' && ['hoan_thanh', 'huy'].includes(order.status)) return false;
@@ -237,21 +230,16 @@ function Cashflow() {
       externalShippingCost: 0,
       actualReceived: 0,
       returnedAmount: 0,
-      cancelledAmount: 0,
       completedAmount: 0,
       incompleteAmount: 0,
       completedCount: 0,
       incompleteCount: 0,
-      cancelledCount: 0,
       totalCount: filteredOrders.length,
     };
 
     filteredOrders.forEach((order) => {
       // Không cộng doanh thu/doanh số cho đơn đã hủy
       if (order.status === 'huy') {
-        const totalAmount = Number(order.totalAmount || 0);
-        totals.cancelledAmount += totalAmount;
-        totals.cancelledCount += 1;
         return;
       }
 
@@ -323,10 +311,8 @@ function Cashflow() {
       ];
     });
 
-    // Excel trên Windows cần BOM để hiển thị tiếng Việt đúng
-    const BOM = '\uFEFF';
-    const csv = BOM + [headers, ...rows]
-      .map((row) => row.map(escapeCsv).join(CSV_DELIMITER))
+    const csv = [headers, ...rows]
+      .map((row) => row.map(escapeCsv).join(','))
       .join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -464,7 +450,6 @@ function Cashflow() {
                   <h4 className="mb-1">{summary.totalCount}</h4>
                   <div className="small text-success">Hoàn thành: {summary.completedCount}</div>
                   <div className="small text-warning">Chưa hoàn thành: {summary.incompleteCount}</div>
-                  <div className="small text-danger">Đã hủy: {summary.cancelledCount}</div>
                 </div>
               </div>
             </div>
@@ -475,7 +460,6 @@ function Cashflow() {
                   <h5 className="mb-1">{formatCurrency(summary.totalAmount)}</h5>
                   <div className="small text-success">Hoàn thành: {formatCurrency(summary.completedAmount)}</div>
                   <div className="small text-warning">Chưa hoàn thành: {formatCurrency(summary.incompleteAmount)}</div>
-                  <div className="small text-danger">Đã hủy: {formatCurrency(summary.cancelledAmount)}</div>
                   <div className="small text-primary mt-1">Doanh số (tiền tranh): <strong>{formatCurrency(summary.paintingRevenue)}</strong></div>
                 </div>
               </div>
@@ -503,19 +487,15 @@ function Cashflow() {
             </div>
           </div>
 
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <div>
-              <span className="fw-semibold">Kết quả ({filteredOrders.length} đơn)</span>
-              <small className="text-muted ms-2">Hiển thị nhanh để kiểm tra chi tiết từng đơn</small>
-            </div>
-            <button type="button" className="btn btn-success btn-sm" onClick={exportToCsv}>
-              <i className="bi bi-download me-1"></i> Xuất CSV
-            </button>
-          </div>
-
           <div className="card">
-            <div className="card-header">
-              <div className="small text-muted">Chi tiết đơn theo bộ lọc</div>
+            <div className="card-header d-flex justify-content-between align-items-center">
+              <div>
+                <span>Kết quả ({filteredOrders.length} đơn)</span>
+                <small className="text-muted ms-2">Hiển thị nhanh để kiểm tra chi tiết từng đơn</small>
+              </div>
+              <button type="button" className="btn btn-sm btn-outline-success" onClick={exportToCsv}>
+                <i className="bi bi-download"></i> Xuất CSV
+              </button>
             </div>
             <div className="table-responsive">
               <table className="table align-middle mb-0">

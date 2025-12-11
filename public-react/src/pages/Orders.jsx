@@ -20,6 +20,7 @@ const buildQueryString = (q = {}) => {
   if (q.createdBy) params.append('createdBy', q.createdBy);
   if (q.page) params.append('page', q.page);
   if (q.limit) params.append('limit', q.limit);
+  if (q.sortOrder) params.append('sortOrder', q.sortOrder);
   return params.toString();
 };
 
@@ -79,6 +80,7 @@ function Orders() {
     const q = { ...pendingQuery };
     q.page = page;
     q.limit = limit;
+    q.sortOrder = sortOrder || '';
     // Remove empty values
     Object.keys(q).forEach(key => {
       if (q[key] === '' || q[key] === null || q[key] === undefined) {
@@ -86,7 +88,7 @@ function Orders() {
       }
     });
     return q;
-  }, [pendingQuery, page, limit]);
+  }, [pendingQuery, page, limit, sortOrder]);
 
   const { data: ordersResp = {}, isLoading: ordersLoading } = useOrders(queryFilters);
 
@@ -197,9 +199,14 @@ function Orders() {
   }, [frameSizeSort]);
 
   useEffect(() => {
-    if (sortOrder || frameSizeSort) {
-      // Nếu có sort, chỉ sort lại data hiện có
+    if (frameSizeSort) {
+      // Sắp xếp theo kích thước khung trên dữ liệu hiện có
       setOrders((prev) => sortOrdersData(prev, sortOrder, frameSizeSort));
+    } else {
+      // Sort theo ngày tạo: refetch backend để phân trang đúng toàn bộ
+      setTableLoading(true);
+      setPage(1);
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortOrder, frameSizeSort]);

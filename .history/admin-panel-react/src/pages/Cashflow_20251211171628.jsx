@@ -27,14 +27,15 @@ const buildQuickRange = (rangeKey) => {
       end.setHours(23, 59, 59, 999);
       break;
     }
-    case 'yesterday':
+    case 'yesterday': {
       start.setDate(now.getDate() - 1);
       end.setDate(now.getDate() - 1);
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
       break;
+    }
     case 'thisWeek': {
-      const day = now.getDay() === 0 ? 7 : now.getDay();
+      const day = now.getDay() === 0 ? 7 : now.getDay(); // Chủ nhật = 7
       start.setDate(now.getDate() - (day - 1));
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
@@ -48,21 +49,25 @@ const buildQuickRange = (rangeKey) => {
       start.setHours(0, 0, 0, 0);
       break;
     }
-    case 'thisMonth':
+    case 'thisMonth': {
       start.setDate(1);
       start.setHours(0, 0, 0, 0);
       end.setMonth(now.getMonth() + 1, 0);
       end.setHours(23, 59, 59, 999);
       break;
-    case 'lastMonth':
+    }
+    case 'lastMonth': {
       start.setMonth(now.getMonth() - 1, 1);
       start.setHours(0, 0, 0, 0);
-      end.setDate(0);
+      end.setDate(0); // ngày cuối tháng trước
       end.setHours(23, 59, 59, 999);
       break;
-    default:
+    }
+    default: {
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
+      break;
+    }
   }
 
   return {
@@ -146,6 +151,7 @@ function Cashflow() {
     setLoading(true);
     setError('');
     try {
+      // Lấy nhiều hơn để tính toán (tối đa 2000 đơn)
       const response = await api.get('/api/orders?limit=2000');
       if (response.data.success) {
         setOrders(response.data.data || []);
@@ -294,7 +300,7 @@ function Cashflow() {
     return totals;
   }, [filteredOrders]);
 
-  // Phân trang danh sách hiển thị, export CSV vẫn dùng full filteredOrders
+  // Phân trang danh sách hiển thị, nhưng export CSV vẫn dùng full filteredOrders
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / limit));
   const currentPage = Math.min(page, totalPages);
   const paginatedOrders = useMemo(() => {
@@ -527,7 +533,9 @@ function Cashflow() {
           </div>
 
           <div className="card">
-            
+            <div className="card-header">
+              <div className="small text-muted">Chi tiết đơn theo bộ lọc</div>
+            </div>
             <div className="table-responsive">
               <table className="table align-middle mb-0">
                 <thead>

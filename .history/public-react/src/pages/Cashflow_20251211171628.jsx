@@ -527,7 +527,9 @@ function Cashflow() {
           </div>
 
           <div className="card">
-            
+            <div className="card-header">
+              <div className="small text-muted">Chi tiết đơn theo bộ lọc</div>
+            </div>
             <div className="table-responsive">
               <table className="table align-middle mb-0">
                 <thead>

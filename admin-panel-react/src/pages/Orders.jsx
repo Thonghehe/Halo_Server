@@ -17,6 +17,7 @@ const buildQueryString = (q = {}) => {
   if (q.createdBy) params.append('createdBy', q.createdBy);
   if (q.page) params.append('page', q.page);
   if (q.limit) params.append('limit', q.limit);
+  if (q.sortOrder) params.append('sortOrder', q.sortOrder);
   return params.toString();
 };
 
@@ -135,7 +136,12 @@ function Orders() {
       if (!silent) {
         setTableLoading(true);
       }
-      const qs = buildQueryString({ ...q, page: nextPage, limit: nextLimit });
+      const qs = buildQueryString({
+        ...q,
+        page: nextPage,
+        limit: nextLimit,
+        sortOrder: sortOrderRef.current || ''
+      });
       const url = qs ? `/api/orders?${qs}` : '/api/orders';
       const response = await api.get(url);
       if (response.data.success) {
@@ -188,10 +194,14 @@ function Orders() {
   }, [frameSizeSort]);
 
   useEffect(() => {
-    if (!sortOrder && !frameSizeSort) {
-      loadOrders({ ...pendingQueryRef.current }, { preserveScroll: true, silent: true });
-    } else {
+    if (frameSizeSort) {
+      // Sort theo kích thước khung trên dữ liệu hiện tại
       setOrders((prev) => sortOrdersData(prev, sortOrder, frameSizeSort));
+    } else {
+      // Sort theo ngày tạo: refetch backend để phân trang đúng toàn bộ
+      setTableLoading(true);
+      setPage(1);
+      loadOrders({ ...pendingQueryRef.current, page: 1, limit });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortOrder, frameSizeSort]);

@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import Order from '../../models/Order.js';
 import OrderDraft from '../../models/OrderDraft.js';
 import Painting from '../../models/Painting.js';
@@ -18,8 +17,7 @@ export const getOrders = async (query = {}) => {
       frameCuttingStatus,
       startDate,
       endDate,
-      createdBy,
-      sortOrder
+      createdBy
     } = query;
 
     const filter = {};
@@ -45,13 +43,7 @@ export const getOrders = async (query = {}) => {
         filter.frameCuttingStatus = frameCuttingStatus;
       }
     }
-    if (createdBy) {
-      // Cast string to ObjectId để $match khớp chính xác trong aggregation
-      const castedId = mongoose.Types.ObjectId.isValid(createdBy)
-        ? new mongoose.Types.ObjectId(createdBy)
-        : createdBy;
-      filter.createdBy = castedId;
-    }
+    if (createdBy) filter.createdBy = createdBy;
 
     if (startDate || endDate) {
       filter.createdAt = {};
@@ -198,30 +190,18 @@ export const getOrders = async (query = {}) => {
           }
         }
       },
-      (() => {
-        // Nếu sortOrder được truyền (asc/desc), ưu tiên sắp xếp toàn bộ theo createdAt để đảm bảo phân trang đúng
-        if (sortOrder === 'asc' || sortOrder === 'desc') {
-          return {
-            $sort: {
-              createdAt: sortOrder === 'asc' ? 1 : -1,
-              _id: -1
-            }
-          };
+      {
+        $sort: {
+          isCancelled: 1,
+          isReturned: 1,
+          isNewGap: -1,
+          isNew: -1,
+          isCompleted: -1,
+          orderTypePriority: 1,
+          createdAt: 1, // giữ giống comparator cũ (cũ trước)
+          statusPriority: 1
         }
-        // Mặc định: giữ logic ưu tiên cũ
-        return {
-          $sort: {
-            isCancelled: 1,
-            isReturned: 1,
-            isNewGap: -1,
-            isNew: -1,
-            isCompleted: -1,
-            orderTypePriority: 1,
-            createdAt: 1, // giữ giống comparator cũ (cũ trước)
-            statusPriority: 1
-          }
-        };
-      })(),
+      },
       {
         $facet: {
           data: [

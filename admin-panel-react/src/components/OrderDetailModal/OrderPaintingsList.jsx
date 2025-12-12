@@ -12,14 +12,14 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
   const [receivingPacking, setReceivingPacking] = useState({});
 
   const userRoles = Array.isArray(user?.roles) ? user.roles : [];
-  const isAdmin = userRoles.includes('admin');
   const isIn = userRoles.includes('in');
   const isSanXuat = userRoles.includes('sanXuat');
   const isDongGoi = userRoles.includes('dongGoi');
 
-  const canMarkPrinted = isAdmin || isIn;
-  const canReceive = isAdmin || isSanXuat;
-  const canReceivePacking = isAdmin || isDongGoi;
+  // Chỉ hiển thị nút cho role tương ứng (không bao gồm admin)
+  const canMarkPrinted = isIn;
+  const canReceive = isSanXuat;
+  const canReceivePacking = isDongGoi;
 
   // Kiểm tra tranh có cần vào khung không (tranh dán và chỉ in không cần)
   const requiresFrameAssembly = (painting) => {

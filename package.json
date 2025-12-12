@@ -6,7 +6,8 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "migrate:paintings": "node src/scripts/migrate-painting-status.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

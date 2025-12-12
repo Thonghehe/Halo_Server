@@ -16,7 +16,10 @@ import {
   requestRework as requestReworkService,
   productionRequest as productionRequestService,
   deleteOrder as deleteOrderService,
-  deleteOldOrders as deleteOldOrdersService
+  deleteOldOrders as deleteOldOrdersService,
+  markPaintingPrinted as markPaintingPrintedService,
+  receivePaintingByProduction as receivePaintingByProductionService,
+  receivePaintingByPacking as receivePaintingByPackingService
 } from '../services/orders.service.js';
 
 export const streamOrders = (req, res) => {
@@ -162,6 +165,24 @@ export const deleteOldOrders = async (req, res) => {
   }
 
   const result = await deleteOldOrdersService(months);
+  return res.status(result.statusCode).json(result.body);
+};
+
+export const markPaintingPrinted = async (req, res) => {
+  const { orderId, paintingId } = req.params;
+  const result = await markPaintingPrintedService(orderId, paintingId, req.user);
+  return res.status(result.statusCode).json(result.body);
+};
+
+export const receivePaintingByProduction = async (req, res) => {
+  const { orderId, paintingId } = req.params;
+  const result = await receivePaintingByProductionService(orderId, paintingId, req.user);
+  return res.status(result.statusCode).json(result.body);
+};
+
+export const receivePaintingByPacking = async (req, res) => {
+  const { orderId, paintingId } = req.params;
+  const result = await receivePaintingByPackingService(orderId, paintingId, req.user);
   return res.status(result.statusCode).json(result.body);
 };
 

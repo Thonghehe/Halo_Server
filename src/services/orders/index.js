@@ -3,5 +3,6 @@ export * from './mutation.service.js';
 export * from './draft.service.js';
 export * from './status.service.js';
 export * from './production.service.js';
+export * from './painting.service.js';
 
 

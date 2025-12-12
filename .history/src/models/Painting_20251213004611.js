@@ -91,57 +91,6 @@ const paintingSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order',
     required: true
-  },
-
-  // Trạng thái in của tranh
-  isPrinted: {
-    type: Boolean,
-    default: false
-  },
-
-  // Người đánh dấu đã in
-  printedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-
-  // Thời gian đánh dấu đã in
-  printedAt: {
-    type: Date
-  },
-
-  // Sản xuất đã nhận tranh chưa
-  receivedByProduction: {
-    type: Boolean,
-    default: false
-  },
-
-  // Người sản xuất nhận tranh
-  receivedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-
-  // Thời gian sản xuất nhận tranh
-  receivedAt: {
-    type: Date
-  },
-
-  // Đóng gói đã nhận tranh chưa (cho tranh dán và chỉ in)
-  receivedByPacking: {
-    type: Boolean,
-    default: false
-  },
-
-  // Người đóng gói nhận tranh
-  receivedByPackingBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-
-  // Thời gian đóng gói nhận tranh
-  receivedByPackingAt: {
-    type: Date
   }
 
 }, {

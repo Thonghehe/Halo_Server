@@ -18,7 +18,10 @@ import {
   requestRework as requestReworkController,
   productionRequest as productionRequestController,
   deleteOrder as deleteOrderController,
-  deleteOldOrders as deleteOldOrdersController
+  deleteOldOrders as deleteOldOrdersController,
+  markPaintingPrinted as markPaintingPrintedController,
+  receivePaintingByProduction as receivePaintingByProductionController,
+  receivePaintingByPacking as receivePaintingByPackingController
 } from '../controllers/orders.controller.js';
 
 const router = express.Router();
@@ -732,5 +735,96 @@ router.post(
   authorize('admin'),
   deleteOldOrdersController
 );
+
+/**
+ * @swagger
+ * /api/orders/{orderId}/paintings/{paintingId}/mark-printed:
+ *   patch:
+ *     summary: Đánh dấu tranh đã in
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: paintingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đánh dấu tranh đã in thành công
+ *       403:
+ *         description: Không có quyền (chỉ role 'in' hoặc 'admin')
+ *       404:
+ *         description: Không tìm thấy đơn hàng hoặc tranh
+ */
+router.patch('/:orderId/paintings/:paintingId/mark-printed', authenticate, markPaintingPrintedController);
+
+/**
+ * @swagger
+ * /api/orders/{orderId}/paintings/{paintingId}/receive:
+ *   patch:
+ *     summary: Sản xuất nhận tranh
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: paintingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Nhận tranh thành công
+ *       400:
+ *         description: Tranh chưa được in hoặc đã được nhận
+ *       403:
+ *         description: Không có quyền (chỉ role 'sanXuat' hoặc 'admin')
+ *       404:
+ *         description: Không tìm thấy đơn hàng hoặc tranh
+ */
+router.patch('/:orderId/paintings/:paintingId/receive', authenticate, receivePaintingByProductionController);
+
+/**
+ * @swagger
+ * /api/orders/{orderId}/paintings/{paintingId}/receive-packing:
+ *   patch:
+ *     summary: Đóng gói nhận tranh (chỉ cho tranh dán và chỉ in)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: paintingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Nhận tranh thành công
+ *       400:
+ *         description: Tranh chưa được in, đã được nhận, hoặc không phải tranh dán/chỉ in
+ *       403:
+ *         description: Không có quyền (chỉ role 'dongGoi' hoặc 'admin')
+ *       404:
+ *         description: Không tìm thấy đơn hàng hoặc tranh
+ */
+router.patch('/:orderId/paintings/:paintingId/receive-packing', authenticate, receivePaintingByPackingController);
 
 export default router;

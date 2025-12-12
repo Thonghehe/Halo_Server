@@ -43,6 +43,15 @@ export default function OrderHeader({ order, shouldHideMoneyFields }) {
           <span className={`badge ${getPrintingStatusBadgeClass(order.printingStatus || 'chua_in')}`}>
             {getVnPrintingStatusName(order.printingStatus || 'chua_in')}
           </span>
+          {order.paintings && Array.isArray(order.paintings) && order.paintings.length > 0 && (() => {
+            const totalPaintings = order.paintings.length;
+            const printedPaintings = order.paintings.filter(p => p.isPrinted).length;
+            return (
+              <span className="ms-2 text-muted">
+                ({printedPaintings}/{totalPaintings} tranh)
+              </span>
+            );
+          })()}
         </div>
         {/*
         <div className="mb-2">
@@ -107,7 +116,7 @@ export default function OrderHeader({ order, shouldHideMoneyFields }) {
             </strong>
             <div className="d-flex flex-wrap gap-2">
               {order.paymentBillImages.map((img, index) => {
-                const imageUrl = getImageUrl(img, 'payment-bill');
+                const imageUrl = getImageUrl(img, 'payment-bills');
                 if (!imageUrl) return null;
                 return (
                   <div

@@ -1,10 +1,86 @@
+import { useState } from 'react';
 import * as orderUtils from '../../utils/orderUtils';
+import api from '../../utils/api';
 
 /**
  * Component hiển thị danh sách tranh
  */
-export default function OrderPaintingsList({ paintings, getPaintingMentions, onMentionClick }) {
+export default function OrderPaintingsList({ paintings, getPaintingMentions, onMentionClick, orderId, user, onPaintingUpdated }) {
   const { getVnPaintingTypeName, getImageUrl } = orderUtils;
+  const [markingPrinted, setMarkingPrinted] = useState({});
+  const [receiving, setReceiving] = useState({});
+  const [receivingPacking, setReceivingPacking] = useState({});
+
+  const userRoles = Array.isArray(user?.roles) ? user.roles : [];
+  const isAdmin = userRoles.includes('admin');
+  const isIn = userRoles.includes('in');
+  const isSanXuat = userRoles.includes('sanXuat');
+  const isDongGoi = userRoles.includes('dongGoi');
+
+  const canMarkPrinted = isAdmin || isIn;
+  const canReceive = isAdmin || isSanXuat;
+  const canReceivePacking = isAdmin || isDongGoi;
+
+  // Kiểm tra tranh có cần vào khung không (tranh dán và chỉ in không cần)
+  const requiresFrameAssembly = (painting) => {
+    if (!painting) return false;
+    const type = painting.type;
+    return ['tranh_khung', 'tranh_tron', 'trang_guong', 'in_noi', 'son_dau'].includes(type);
+  };
+
+  const handleMarkPrinted = async (paintingId) => {
+    if (!orderId || !paintingId) return;
+    
+    setMarkingPrinted(prev => ({ ...prev, [paintingId]: true }));
+    try {
+      const response = await api.patch(`/api/orders/${orderId}/paintings/${paintingId}/mark-printed`);
+      if (response.data.success) {
+        if (onPaintingUpdated) onPaintingUpdated();
+      } else {
+        alert(response.data.message || 'Có lỗi xảy ra');
+      }
+    } catch (error) {
+      alert(error.message || 'Có lỗi xảy ra khi đánh dấu tranh đã in');
+    } finally {
+      setMarkingPrinted(prev => ({ ...prev, [paintingId]: false }));
+    }
+  };
+
+  const handleReceive = async (paintingId) => {
+    if (!orderId || !paintingId) return;
+    
+    setReceiving(prev => ({ ...prev, [paintingId]: true }));
+    try {
+      const response = await api.patch(`/api/orders/${orderId}/paintings/${paintingId}/receive`);
+      if (response.data.success) {
+        if (onPaintingUpdated) onPaintingUpdated();
+      } else {
+        alert(response.data.message || 'Có lỗi xảy ra');
+      }
+    } catch (error) {
+      alert(error.message || 'Có lỗi xảy ra khi nhận tranh');
+    } finally {
+      setReceiving(prev => ({ ...prev, [paintingId]: false }));
+    }
+  };
+
+  const handleReceivePacking = async (paintingId) => {
+    if (!orderId || !paintingId) return;
+    
+    setReceivingPacking(prev => ({ ...prev, [paintingId]: true }));
+    try {
+      const response = await api.patch(`/api/orders/${orderId}/paintings/${paintingId}/receive-packing`);
+      if (response.data.success) {
+        if (onPaintingUpdated) onPaintingUpdated();
+      } else {
+        alert(response.data.message || 'Có lỗi xảy ra');
+      }
+    } catch (error) {
+      alert(error.message || 'Có lỗi xảy ra khi nhận tranh');
+    } finally {
+      setReceivingPacking(prev => ({ ...prev, [paintingId]: false }));
+    }
+  };
 
   if (!paintings || paintings.length === 0) return null;
 
@@ -56,6 +132,127 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
                 <p className="mb-1">
                   <strong>Số lượng:</strong> {painting.quantity || 1}
                 </p>
+                
+                {/* Trạng thái in */}
+                <div className="mb-2">
+                  <strong>Trạng thái in:</strong>{' '}
+                  {painting.isPrinted ? (
+                    <span className="badge bg-success">
+                      <i className="bi bi-check-circle me-1"></i>Đã in
+                    </span>
+                  ) : (
+                    <span className="badge bg-secondary">
+                      <i className="bi bi-x-circle me-1"></i>Chưa in
+                    </span>
+                  )}
+                  {painting.printedAt && (
+                    <small className="text-muted d-block mt-1">
+                      {new Date(painting.printedAt).toLocaleString('vi-VN')}
+                    </small>
+                  )}
+                </div>
+
+                {/* Trạng thái nhận sản xuất (cho tranh cần vào khung) */}
+                {painting.isPrinted && requiresFrameAssembly(painting) && (
+                  <div className="mb-2">
+                    <strong>Sản xuất đã nhận:</strong>{' '}
+                    {painting.receivedByProduction ? (
+                      <span className="badge bg-info">
+                        <i className="bi bi-check-circle me-1"></i>Đã nhận
+                      </span>
+                    ) : (
+                      <span className="badge bg-warning">
+                        <i className="bi bi-clock me-1"></i>Chưa nhận
+                      </span>
+                    )}
+                    {painting.receivedAt && (
+                      <small className="text-muted d-block mt-1">
+                        {new Date(painting.receivedAt).toLocaleString('vi-VN')}
+                      </small>
+                    )}
+                  </div>
+                )}
+
+                {/* Trạng thái nhận đóng gói (cho tranh dán và chỉ in) */}
+                {painting.isPrinted && !requiresFrameAssembly(painting) && (
+                  <div className="mb-2">
+                    <strong>Đóng gói đã nhận:</strong>{' '}
+                    {painting.receivedByPacking ? (
+                      <span className="badge bg-info">
+                        <i className="bi bi-check-circle me-1"></i>Đã nhận
+                      </span>
+                    ) : (
+                      <span className="badge bg-warning">
+                        <i className="bi bi-clock me-1"></i>Chưa nhận
+                      </span>
+                    )}
+                    {painting.receivedByPackingAt && (
+                      <small className="text-muted d-block mt-1">
+                        {new Date(painting.receivedByPackingAt).toLocaleString('vi-VN')}
+                      </small>
+                    )}
+                  </div>
+                )}
+
+                {/* Nút thao tác */}
+                <div className="d-flex gap-2 flex-wrap mt-2">
+                  {canMarkPrinted && !painting.isPrinted && (
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={() => handleMarkPrinted(painting._id)}
+                      disabled={markingPrinted[painting._id]}
+                    >
+                      {markingPrinted[painting._id] ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-printer me-1"></i>Đánh dấu đã in
+                        </>
+                      )}
+                    </button>
+                  )}
+                  {/* Nút nhận cho sản xuất (tranh cần vào khung) */}
+                  {canReceive && painting.isPrinted && requiresFrameAssembly(painting) && !painting.receivedByProduction && (
+                    <button
+                      className="btn btn-sm btn-info"
+                      onClick={() => handleReceive(painting._id)}
+                      disabled={receiving[painting._id]}
+                    >
+                      {receiving[painting._id] ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-check-circle me-1"></i>Sản xuất nhận
+                        </>
+                      )}
+                    </button>
+                  )}
+                  {/* Nút nhận cho đóng gói (tranh dán và chỉ in) */}
+                  {canReceivePacking && painting.isPrinted && !requiresFrameAssembly(painting) && !painting.receivedByPacking && (
+                    <button
+                      className="btn btn-sm btn-success"
+                      onClick={() => handleReceivePacking(painting._id)}
+                      disabled={receivingPacking[painting._id]}
+                    >
+                      {receivingPacking[painting._id] ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-box-seam me-1"></i>Đóng gói nhận
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
                 
                 {/* Ghi chú */}
                 {painting.note && (() => {

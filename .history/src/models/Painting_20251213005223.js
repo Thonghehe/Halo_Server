@@ -125,23 +125,6 @@ const paintingSchema = new mongoose.Schema({
   // Thời gian sản xuất nhận tranh
   receivedAt: {
     type: Date
-  },
-
-  // Đóng gói đã nhận tranh chưa (cho tranh dán và chỉ in)
-  receivedByPacking: {
-    type: Boolean,
-    default: false
-  },
-
-  // Người đóng gói nhận tranh
-  receivedByPackingBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-
-  // Thời gian đóng gói nhận tranh
-  receivedByPackingAt: {
-    type: Date
   }
 
 }, {

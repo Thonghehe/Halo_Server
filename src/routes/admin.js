@@ -7,7 +7,8 @@ import {
   getUsersController,
   getUserDetailController,
   updateUserRolesController,
-  toggleUserActiveController
+  toggleUserActiveController,
+  migratePaintingStatusController
 } from '../controllers/admin.controller.js';
 
 const router = express.Router();
@@ -101,6 +102,23 @@ router.patch(
   authenticate,
   authorize('admin'),
   toggleUserActiveController
+);
+
+/**
+ * @swagger
+ * /api/admin/migrate/painting-status:
+ *   post:
+ *     summary: Migration trạng thái painting (chỉ admin)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Cập nhật các field mới (isPrinted, receivedByProduction, receivedByPacking) cho các painting cũ
+ */
+router.post(
+  '/migrate/painting-status',
+  authenticate,
+  authorize('admin'),
+  migratePaintingStatusController
 );
 
 export default router;

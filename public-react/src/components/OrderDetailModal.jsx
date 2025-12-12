@@ -680,6 +680,12 @@ function OrderDetailModal({ orderId, show, onClose, onOrderUpdated }) {
                         taggedAt: mention.taggedAt || null
                       });
                     }}
+                    orderId={orderId}
+                    user={user}
+                    onPaintingUpdated={async () => {
+                      await refreshOrder();
+                      if (onOrderUpdated) onOrderUpdated();
+                    }}
                   />
                 )}
 

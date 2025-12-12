@@ -5,7 +5,8 @@ import {
   getUsers,
   getUserDetail,
   updateUserRoles,
-  toggleUserActive
+  toggleUserActive,
+  migratePaintingStatus
 } from '../services/admin.service.js';
 
 export const getPendingUsersController = async (req, res) => {
@@ -45,6 +46,11 @@ export const updateUserRolesController = async (req, res) => {
 export const toggleUserActiveController = async (req, res) => {
   const { userId } = req.params;
   const result = await toggleUserActive(userId, req.body || {}, req.user);
+  return res.status(result.statusCode).json(result.body);
+};
+
+export const migratePaintingStatusController = async (req, res) => {
+  const result = await migratePaintingStatus();
   return res.status(result.statusCode).json(result.body);
 };
 

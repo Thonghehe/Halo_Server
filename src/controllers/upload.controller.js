@@ -160,7 +160,7 @@ export const serveUploadedFileController = async (req, res) => {
   try {
     const { type, filename } = req.params;
 
-    if (!['paintings', 'deposits', 'files'].includes(type)) {
+    if (!['paintings', 'deposits', 'files', 'payment-bills'].includes(type)) {
       return res.status(400).json({
         success: false,
         message: 'Loại file không hợp lệ'
@@ -186,10 +186,10 @@ export const serveUploadedFileController = async (req, res) => {
 export const deleteUploadedFileController = async (req, res) => {
   try {
     const { type, filename } = req.params;
-    if (!['paintings', 'deposits', 'files'].includes(type)) {
+    if (!['paintings', 'deposits', 'files', 'payment-bills'].includes(type)) {
       return res.status(400).json({
         success: false,
-        message: 'Loại file không hợp lệ. Chỉ chấp nhận: paintings, deposits, files'
+        message: 'Loại file không hợp lệ. Chỉ chấp nhận: paintings, deposits, files, payment-bills'
       });
     }
 

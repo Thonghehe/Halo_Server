@@ -29,9 +29,9 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
                     {painting.type === 'tranh_tron'
                       ? `${painting.width || painting.height} cm (Đường kính)`
                       : painting.width && painting.height
-                      ? `Ngang: ${painting.width} cm, Cao: ${painting.height} cm`
+                      ? `Rộng: ${painting.width} cm, Cao: ${painting.height} cm`
                       : painting.width
-                      ? `Ngang: ${painting.width} cm`
+                      ? `Rộng: ${painting.width} cm`
                       : painting.height
                       ? `Cao: ${painting.height} cm`
                       : '-'}

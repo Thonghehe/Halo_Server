@@ -16,7 +16,8 @@ export default function OrderHeader({ order, shouldHideMoneyFields }) {
     getVnFrameCuttingStatusName,
     getFrameCuttingStatusBadgeClass,
     formatDateTime,
-    getShippingMethodLabel
+    getShippingMethodLabel,
+    getImageUrl
   } = orderUtils;
 
   return (
@@ -93,6 +94,42 @@ export default function OrderHeader({ order, shouldHideMoneyFields }) {
         {order.status === 'hoan_thanh' && order.actualCompletionDate && (
           <div>
             <strong>Ngày hoàn thành:</strong> {formatDateTime(order.actualCompletionDate)}
+          </div>
+        )}
+        {/* Hiển thị bill thanh toán cho đơn "Khách đến nhận" đã hoàn thành */}
+        {order.status === 'hoan_thanh' && 
+         order.shippingMethod === 'khach_den_nhan' && 
+         Array.isArray(order.paymentBillImages) && 
+         order.paymentBillImages.length > 0 && (
+          <div className="mt-3">
+            <strong className="d-block mb-2">
+              <i className="bi bi-receipt me-2"></i>Bill thanh toán:
+            </strong>
+            <div className="d-flex flex-wrap gap-2">
+              {order.paymentBillImages.map((img, index) => {
+                const imageUrl = getImageUrl(img, 'payment-bill');
+                if (!imageUrl) return null;
+                return (
+                  <div
+                    key={`${img}-${index}`}
+                    className="position-relative"
+                    style={{ width: 120, height: 120 }}
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={`Bill thanh toán ${index + 1}`}
+                      className="img-thumbnail w-100 h-100"
+                      style={{ 
+                        objectFit: 'cover',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => window.open(imageUrl, '_blank')}
+                      title="Click để xem ảnh lớn"
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

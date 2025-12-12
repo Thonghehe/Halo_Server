@@ -404,7 +404,9 @@ export const completeOrder = async (orderId, payload = {}, currentUser) => {
       });
     }
 
-    if (!user.roles || !user.roles.includes(role)) {
+    // Admin có thể sử dụng bất kỳ role nào, ngoài ra phải có role tương ứng
+    const isAdmin = user.roles && user.roles.includes('admin');
+    if (!isAdmin && (!user.roles || !user.roles.includes(role))) {
       return buildServiceResponse(403, {
         success: false,
         message: 'Bạn không có quyền đánh dấu hoàn thành đơn hàng này'
@@ -682,6 +684,21 @@ export const completeOrder = async (orderId, payload = {}, currentUser) => {
         });
       }
     } else if (role === 'sale') {
+      // Kiểm tra đơn hàng chưa hoàn thành hoặc hủy
+      if (order.status === 'hoan_thanh') {
+        return buildServiceResponse(400, {
+          success: false,
+          message: 'Đơn hàng đã được hoàn thành rồi'
+        });
+      }
+
+      if (order.status === 'huy') {
+        return buildServiceResponse(400, {
+          success: false,
+          message: 'Không thể hoàn thành đơn hàng đã bị hủy'
+        });
+      }
+
       const printingStatus = order.printingStatus || 'chua_in';
       const frameStatus = order.frameCuttingStatus || 'chua_cat';
       const shippingMethodValue = order.shippingMethod || '';
@@ -709,9 +726,15 @@ export const completeOrder = async (orderId, payload = {}, currentUser) => {
         });
       }
 
+      // Đối với đơn "khách đến nhận", cho phép hoàn thành từ bất kỳ trạng thái nào
+      // (trừ hoan_thanh và huy đã kiểm tra ở trên)
+      // Không cần kiểm tra canTransitionTo vì đây là exception đặc biệt
+      
       order.paymentBillImages = sanitizedPaymentBillImages;
       order.status = 'hoan_thanh';
-      order.actualCompletionDate = new Date();
+      if (!order.actualCompletionDate) {
+        order.actualCompletionDate = new Date();
+      }
       statusNote = `${displayName} đã xác nhận khách đến nhận và thanh toán tại cửa hàng`;
       await order.addStatusHistory('hoan_thanh', user._id, statusNote);
     }

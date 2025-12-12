@@ -66,6 +66,7 @@ export function useOrderPermissions(order, user) {
     const hasKeToanDieuDonRole = userRoles.includes('keToanDieuDon');
     const hasKeToanTaiChinhRole = userRoles.includes('keToanTaiChinh');
     const hasSaleRole = userRoles.includes('sale');
+    const hasAdminRole = userRoles.includes('admin');
     
     // Kiểm tra role in
     if (hasInRole) {
@@ -115,7 +116,8 @@ export function useOrderPermissions(order, user) {
       }
     }
 
-    if (hasSaleRole) {
+    // Kiểm tra role sale hoặc admin cho đơn "Khách đến nhận"
+    if (hasSaleRole || hasAdminRole) {
       const printingStatus = order.printingStatus || 'chua_in';
       const frameCuttingStatus = order.frameCuttingStatus || 'chua_cat';
       const shippingMethod = order.shippingMethod || '';

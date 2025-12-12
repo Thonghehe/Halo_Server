@@ -4,7 +4,9 @@ import api from '../utils/api';
 const PaymentBillModal = ({ show, onClose, onConfirm, existingImages = [], onError }) => {
   const [billImages, setBillImages] = useState(existingImages || []);
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
+  const dropZoneRef = useRef(null);
 
   useEffect(() => {
     if (show) {
@@ -22,15 +24,21 @@ const PaymentBillModal = ({ show, onClose, onConfirm, existingImages = [], onErr
     }
   };
 
-  const handleUpload = async (event) => {
-    const input = event.target;
-    const files = input?.files;
-    if (!files || files.length === 0) return;
+  const normalizeFilesInput = (files) => {
+    if (!files) return [];
+    if (files instanceof FileList) return Array.from(files);
+    if (Array.isArray(files)) return files;
+    return [files];
+  };
+
+  const handleUploadFiles = async (files) => {
+    const fileList = normalizeFilesInput(files).filter(file => file && file.type?.startsWith('image/'));
+    if (fileList.length === 0) return;
 
     setUploading(true);
     try {
       const formData = new FormData();
-      Array.from(files).forEach((file) => formData.append('images', file));
+      fileList.forEach((file) => formData.append('images', file));
       const response = await api.post('/api/upload/payment-bill', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -45,9 +53,59 @@ const PaymentBillModal = ({ show, onClose, onConfirm, existingImages = [], onErr
       notifyError(error.response?.data?.message || error.message || 'Upload thất bại');
     } finally {
       setUploading(false);
-      if (input) {
-        input.value = '';
+    }
+  };
+
+  const handleUpload = async (event) => {
+    const input = event.target;
+    const files = input?.files;
+    if (!files || files.length === 0) return;
+    await handleUploadFiles(files);
+    if (input) {
+      input.value = '';
+    }
+  };
+
+  // Drag & Drop handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      await handleUploadFiles(files);
+    }
+  };
+
+  // Paste handler
+  const handlePaste = async (e) => {
+    e.preventDefault();
+    const items = e.clipboardData.items;
+    const files = [];
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        files.push(file);
       }
+    }
+
+    if (files.length > 0) {
+      await handleUploadFiles(files);
     }
   };
 
@@ -106,36 +164,57 @@ const PaymentBillModal = ({ show, onClose, onConfirm, existingImages = [], onErr
                     </button>
                   </div>
                 ))}
-                <button
-                  type="button"
-                  className="btn btn-outline-primary d-flex flex-column justify-content-center align-items-center"
-                  style={{ width: 120, height: 120 }}
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
+                <div
+                  ref={dropZoneRef}
+                  className={`drop-zone ${dragOver ? 'drag-over' : ''}`}
+                  style={{
+                    width: 120,
+                    height: 120,
+                    border: '2px dashed #dee2e6',
+                    borderRadius: '0.375rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    backgroundColor: dragOver ? '#e7f3ff' : 'transparent',
+                    transition: 'all 0.2s'
+                  }}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onPaste={handlePaste}
+                  onClick={(e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  tabIndex={0}
                 >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="d-none"
+                    onChange={handleUpload}
+                    disabled={uploading}
+                  />
                   {uploading ? (
                     <>
                       <span className="spinner-border spinner-border-sm mb-2" role="status" />
-                      Đang tải...
+                      <small className="text-muted">Đang tải...</small>
                     </>
                   ) : (
                     <>
                       <i className="bi bi-plus-circle mb-2" style={{ fontSize: 24 }}></i>
-                      Thêm ảnh
+                      <small className="text-muted text-center px-2">Thêm ảnh</small>
                     </>
                   )}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="d-none"
-                  onChange={handleUpload}
-                />
+                </div>
               </div>
               <small className="text-muted d-block mt-2">
-                Chấp nhận nhiều ảnh. Hỗ trợ PNG, JPG, JPEG, GIF, WEBP (tối đa 20MB mỗi ảnh).
+                Kéo thả ảnh vào đây, chọn nhiều file hoặc paste từ clipboard. Hỗ trợ PNG, JPG, JPEG, GIF, WEBP (tối đa 20MB mỗi ảnh).
               </small>
             </div>
           </div>

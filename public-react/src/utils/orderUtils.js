@@ -166,9 +166,13 @@ export const formatCurrency = (amount) => {
 export const getVnPaintingTypeName = (type) => {
   const names = {
     tranh_dan: 'Tranh dán',
+    tranh_dan_kinh: 'Tranh dán kính',
     tranh_khung: 'Tranh khung',
     tranh_tron: 'Tranh tròn',
-    chi_in: 'Chỉ in'
+    chi_in: 'Chỉ in',
+    trang_guong: 'Tráng gương',
+    in_noi: 'In nổi',
+    son_dau: 'Sơn dầu'
   };
   return names[type] || type;
 };

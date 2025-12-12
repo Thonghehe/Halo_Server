@@ -1364,10 +1364,14 @@ const [profitSharingSearch, setProfitSharingSearch] = useState('');
                       onChange={(e) => handlePaintingChange(index, 'type', e.target.value)}
                       required
                     >
-                      <option value="tranh_dan">Tranh dán</option>
-                      <option value="tranh_khung">Tranh khung</option>
-                      <option value="tranh_tron">Tranh tròn</option>
-                      <option value="chi_in">Chỉ in</option>
+                <option value="tranh_dan">Tranh dán</option>
+                <option value="tranh_dan_kinh">Tranh dán kính</option>
+                <option value="tranh_khung">Tranh khung</option>
+                <option value="tranh_tron">Tranh tròn</option>
+                <option value="trang_guong">Tráng gương</option>
+                <option value="in_noi">In nổi</option>
+                <option value="son_dau">Sơn dầu</option>
+                <option value="chi_in">Chỉ in</option>
                     </select>
                   </div>
 

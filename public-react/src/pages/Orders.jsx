@@ -63,6 +63,7 @@ function Orders() {
   const sortOrderRef = useRef(sortOrder);
   const frameSizeSortRef = useRef(frameSizeSort);
   const isInitialLoadFromURL = useRef(false);
+  const didTriggerInitialFetch = useRef(false);
 
   // Sử dụng React Query hooks
   const { data: allOrders = [], isLoading: allOrdersLoading } = useAllOrders();
@@ -93,6 +94,13 @@ function Orders() {
     });
     return q;
   }, [pendingQuery, page, limit, sortOrder]);
+
+  // Trigger initial fetch once when component mounts (tránh phụ thuộc vào thao tác filter)
+  useEffect(() => {
+    if (didTriggerInitialFetch.current) return;
+    didTriggerInitialFetch.current = true;
+    queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'active' });
+  }, [queryClient]);
 
   const { data: ordersResp = {}, isLoading: ordersLoading } = useOrders(queryFilters);
 
@@ -179,6 +187,28 @@ function Orders() {
       setPageLoading(false);
     }
   }, [ordersResp, ordersLoading, sortOrdersData, page, limit]);
+
+  // Đảm bảo không kẹt loading nếu response trống hoặc lỗi
+  useEffect(() => {
+    if (!ordersLoading) {
+      setPageLoading(false);
+      setTableLoading(false);
+    }
+  }, [ordersLoading]);
+
+  // Đồng bộ pageLoading theo trạng thái fetch chính
+  useEffect(() => {
+    setPageLoading(!!ordersLoading);
+  }, [ordersLoading]);
+
+  // Fallback: nếu vì lý do nào đó isLoading không kết thúc, tắt spinner sau 3s
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+      setTableLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Load filters from URL params on mount
   useEffect(() => {
@@ -282,6 +312,7 @@ function Orders() {
 
   // Auto-load table when search text changes (debounced) - affects only table
   useEffect(() => {
+    if (isInitialLoadFromURL.current) return;
     const handler = setTimeout(() => {
       if (pendingQuery.search.length === 0 || pendingQuery.search.length >= 2) {
         setPage(1);
@@ -740,8 +771,12 @@ function Orders() {
               >
                 <option value="">Tất cả</option>
                 <option value="tranh_dan">Tranh dán</option>
+                <option value="tranh_dan_kinh">Tranh dán kính</option>
                 <option value="tranh_khung">Tranh khung</option>
                 <option value="tranh_tron">Tranh tròn</option>
+                <option value="trang_guong">Tráng gương</option>
+                <option value="in_noi">In nổi</option>
+                <option value="son_dau">Sơn dầu</option>
               </select>
             </div>
             <div className="col-12 col-md-2">

@@ -764,7 +764,6 @@ function Orders() {
               >
                 <option value="">Tất cả</option>
                 <option value="tranh_dan">Tranh dán</option>
-                <option value="tranh_dan_kinh">Tranh dán kính</option>
                 <option value="tranh_khung">Tranh khung</option>
                 <option value="tranh_tron">Tranh tròn</option>
                 <option value="trang_guong">Tráng gương</option>

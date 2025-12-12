@@ -176,7 +176,7 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
                 {/* Trạng thái nhận đóng gói (cho tranh dán và chỉ in) */}
                 {painting.isPrinted && !requiresFrameAssembly(painting) && (
                   <div className="mb-2">
-                    <strong>Đã nhận:</strong>{' '}
+                    <strong>Đóng gói đã nhận:</strong>{' '}
                     {painting.receivedByPacking ? (
                       <span className="badge bg-info">
                         <i className="bi bi-check-circle me-1"></i>Đã nhận
@@ -209,7 +209,7 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
                         </>
                       ) : (
                         <>
-                          <i className="bi bi-printer me-1"></i>Đã in
+                          <i className="bi bi-printer me-1"></i>Đã đã in
                         </>
                       )}
                     </button>
@@ -228,7 +228,7 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
                         </>
                       ) : (
                         <>
-                          <i className="bi bi-check-circle me-1"></i>Nhận tranh
+                          <i className="bi bi-check-circle me-1"></i>Sản xuất nhận
                         </>
                       )}
                     </button>
@@ -247,7 +247,7 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
                         </>
                       ) : (
                         <>
-                          <i className="bi bi-box-seam me-1"></i>Nhận tranh
+                          <i className="bi bi-box-seam me-1"></i>Đóng gói nhận
                         </>
                       )}
                     </button>

@@ -68,13 +68,13 @@ export function useOrderPermissions(order, user) {
     const hasSaleRole = userRoles.includes('sale');
     const hasAdminRole = userRoles.includes('admin');
     
-    // Kiểm tra role in
-    if (hasInRole) {
-      const printingStatus = order.printingStatus || 'chua_in';
-      if (printingStatus === 'chua_in' || printingStatus === 'cho_in' || printingStatus === 'dang_in' || printingStatus === 'cho_in_lai') {
-        return { canComplete: true, role: 'in', label: 'Đã in' };
-      }
-    }
+    // Kiểm tra role in - BỎ nút "Đã in" ở ngoài, chỉ dùng nút đánh dấu từng tranh
+    // if (hasInRole) {
+    //   const printingStatus = order.printingStatus || 'chua_in';
+    //   if (printingStatus === 'chua_in' || printingStatus === 'cho_in' || printingStatus === 'dang_in' || printingStatus === 'cho_in_lai') {
+    //     return { canComplete: true, role: 'in', label: 'Đã in' };
+    //   }
+    // }
     
     // Kiểm tra role cắt khung
     if (hasCatKhungRole && hasFrameCutting) {

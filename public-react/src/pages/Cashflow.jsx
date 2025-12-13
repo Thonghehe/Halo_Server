@@ -4,6 +4,7 @@ import Loading from '../components/Loading';
 import { formatCurrency, getVnStatusName } from '../utils/orderUtils';
 import '../styles/Orders.css';
 import { useAuth } from '../contexts/AuthContext';
+import OrderDetailModal from '../components/OrderDetailModal';
 
 const formatDateInput = (date) => {
   const year = date.getFullYear();
@@ -118,6 +119,8 @@ function Cashflow() {
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     startDate: '',
@@ -546,7 +549,14 @@ function Cashflow() {
                 </thead>
                 <tbody>
                   {paginatedOrders.map((order) => (
-                    <tr key={order._id || order.id}>
+                    <tr 
+                      key={order._id || order.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setSelectedOrderId(order._id || order.id);
+                        setShowOrderModal(true);
+                      }}
+                    >
                       <td>{order.orderCode}</td>
                       <td>
                         <div className="fw-semibold">{order.customerName || 'Khách lẻ'}</div>
@@ -623,6 +633,22 @@ function Cashflow() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Order Detail Modal */}
+      {selectedOrderId && (
+        <OrderDetailModal
+          orderId={selectedOrderId}
+          show={showOrderModal}
+          onClose={() => {
+            setShowOrderModal(false);
+            setSelectedOrderId(null);
+          }}
+          onOrderUpdated={() => {
+            // Reload orders khi order được update
+            loadOrders();
+          }}
+        />
       )}
     </div>
   );

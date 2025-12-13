@@ -46,9 +46,27 @@ export default function OrderHeader({ order, shouldHideMoneyFields }) {
           {order.paintings && Array.isArray(order.paintings) && order.paintings.length > 0 && (() => {
             const totalPaintings = order.paintings.length;
             const printedPaintings = order.paintings.filter(p => p.isPrinted).length;
+            const receivedByProduction = order.paintings.filter(p => p.receivedByProduction).length;
+            const receivedByPacking = order.paintings.filter(p => p.receivedByPacking).length;
+            
+            // Hiển thị số tranh đã in
+            let statusText = `(${printedPaintings}/${totalPaintings} tranh đã in`;
+            
+            // Nếu có tranh sản xuất đã nhận, hiển thị thêm
+            if (receivedByProduction > 0) {
+              statusText += `, sản xuất đã nhận ${receivedByProduction}/${totalPaintings}`;
+            }
+            
+            // Nếu có tranh đóng gói đã nhận, hiển thị thêm
+            if (receivedByPacking > 0) {
+              statusText += `, đóng gói đã nhận ${receivedByPacking}/${totalPaintings}`;
+            }
+            
+            statusText += ')';
+            
             return (
               <span className="ms-2 text-muted">
-                ({printedPaintings}/{totalPaintings} tranh)
+                {statusText}
               </span>
             );
           })()}

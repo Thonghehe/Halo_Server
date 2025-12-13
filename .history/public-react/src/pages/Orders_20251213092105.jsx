@@ -346,8 +346,7 @@ function Orders() {
       return;
     }
     setPage(1);
-    // Trigger refetch ngay lập tức khi filter thay đổi (trừ search đã có debounce)
-    refetchOrders();
+    // Không cần invalidateQueries, React Query sẽ tự động refetch khi queryFilters thay đổi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuery.status, pendingQuery.orderType, pendingQuery.printingStatus, pendingQuery.frameCuttingStatus, pendingQuery.startDate, pendingQuery.endDate, pendingQuery.createdBy, pendingQuery.paintingType]);
 

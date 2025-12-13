@@ -22,6 +22,10 @@ export const useOrders = (filters = {}) => {
       }
       throw new Error(response.data.message || 'Failed to fetch orders');
     },
+    // Giữ data cũ trong khi fetch data mới để tránh flash loading
+    placeholderData: (previousData) => previousData,
+    // Giảm staleTime để refetch nhanh hơn khi filter thay đổi
+    staleTime: 0,
   });
 };
 

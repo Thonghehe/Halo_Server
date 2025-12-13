@@ -431,6 +431,7 @@ function Orders() {
 
   const onKeyDownSearch = (e) => {
     if (e.key === 'Enter') {
+      e.preventDefault(); // Ngăn form submit và reload trang
       applySearch();
     }
   };
@@ -693,6 +694,11 @@ function Orders() {
                 value={pendingQuery.search}
                 onChange={(e) => setPendingQuery({ ...pendingQuery, search: e.target.value })}
                 onKeyDown={onKeyDownSearch}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
               />
             </div>
             <div className="col-12 col-md-1 d-flex align-items-end">

@@ -176,7 +176,7 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
                 {/* Trạng thái nhận đóng gói (cho tranh dán và chỉ in) */}
                 {painting.isPrinted && !requiresFrameAssembly(painting) && (
                   <div className="mb-2">
-                    <strong>Đóng gói:</strong>{' '}
+                    <strong>Đã nhận:</strong>{' '}
                     {painting.receivedByPacking ? (
                       <span className="badge bg-info">
                         <i className="bi bi-check-circle me-1"></i>Đã nhận

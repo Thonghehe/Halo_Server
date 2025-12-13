@@ -169,34 +169,34 @@ export const receivePaintingByProduction = async (orderId, paintingId, currentUs
     const paintingsNeedFrame = order.paintings.filter(p => requiresFrameAssembly(p));
     const totalPaintingsNeedFrame = paintingsNeedFrame.length;
     const receivedPaintingsNeedFrame = paintingsNeedFrame.filter(p => p.receivedByProduction).length;
-    const hasTranhKhung = order.paintings.some(p => requiresFrameAssembly(p));
-    const hasTranhTron = order.paintings.some(p => p?.type === 'tranh_tron');
 
-    // Nếu có tranh cần vào khung và tất cả tranh cần vào khung đã được nhận
-    if (totalPaintingsNeedFrame > 0 && receivedPaintingsNeedFrame === totalPaintingsNeedFrame) {
-      // Cập nhật printingStatus và status khi tất cả tranh cần vào khung đã được nhận
-      if (order.printingStatus === 'da_in' && order.status === 'dang_xu_ly') {
-        if (order.canTransitionTo('cho_san_xuat')) {
-          order.status = 'cho_san_xuat';
+    // Cập nhật printingStatus dựa trên số tranh đã được nhận
+    if (order.printingStatus === 'da_in') {
+      // Nếu có tranh cần vào khung
+      if (totalPaintingsNeedFrame > 0) {
+        // Nếu tất cả tranh cần vào khung đã được nhận
+        if (receivedPaintingsNeedFrame === totalPaintingsNeedFrame) {
           order.printingStatus = 'san_xuat_da_nhan_tranh';
-          const displayName = currentUser?.fullName || currentUser?.email || 'Người dùng';
-          await order.addStatusHistory('cho_san_xuat', currentUser._id, `${displayName} đã nhận đủ tranh cần vào khung, chờ sản xuất vào khung`);
+        }
+        // Nếu một số tranh đã được nhận nhưng chưa đủ
+        else if (receivedPaintingsNeedFrame > 0) {
+          // Giữ nguyên printingStatus = 'da_in', nhưng trạng thái sẽ hiển thị qua số tranh đã nhận
         }
       }
     }
 
-    // Nếu tất cả tranh (bao gồm cả tranh không cần vào khung) đã được nhận
+    // Nếu tất cả tranh đã được nhận, cập nhật trạng thái đơn
     if (receivedPaintings === totalPaintings) {
       // Chỉ cập nhật nếu đơn đang ở trạng thái phù hợp
       if (order.printingStatus === 'da_in' || order.printingStatus === 'san_xuat_da_nhan_tranh') {
-        // Nếu không có tranh khung, chuyển sang chờ đóng gói
+        const hasTranhKhung = order.paintings.some(p => requiresFrameAssembly(p));
+        const hasTranhTron = order.paintings.some(p => p?.type === 'tranh_tron');
+
         if (!hasTranhKhung && order.canTransitionTo('cho_dong_goi')) {
           order.status = 'cho_dong_goi';
           const displayName = currentUser?.fullName || currentUser?.email || 'Người dùng';
           await order.addStatusHistory('cho_dong_goi', currentUser._id, `${displayName} đã nhận đủ tranh, chờ đóng gói`);
-        }
-        // Nếu có tranh khung nhưng chưa chuyển sang cho_san_xuat (trường hợp đặc biệt)
-        else if ((hasTranhKhung || hasTranhTron) && order.status === 'dang_xu_ly' && order.printingStatus === 'da_in') {
+        } else if (hasTranhKhung || hasTranhTron) {
           if (order.canTransitionTo('cho_san_xuat')) {
             order.status = 'cho_san_xuat';
             order.printingStatus = 'san_xuat_da_nhan_tranh';

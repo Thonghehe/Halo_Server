@@ -61,12 +61,11 @@ export const markPaintingPrinted = async (orderId, paintingId, currentUser) => {
     const currentStatus = order.status || 'moi_tao';
 
     // Nếu có ít nhất 1 tranh đã in, cập nhật status từ 'moi_tao' sang 'dang_xu_ly'
+    // Từ 'moi_tao' luôn có thể chuyển sang 'dang_xu_ly', không cần kiểm tra canTransitionTo
     if (printedPaintings > 0 && currentStatus === 'moi_tao') {
-      if (order.canTransitionTo('dang_xu_ly')) {
-        order.status = 'dang_xu_ly';
-        const displayName = currentUser?.fullName || currentUser?.email || 'Người dùng';
-        await order.addStatusHistory('dang_xu_ly', currentUser._id, `${displayName} bắt đầu in tranh`);
-      }
+      order.status = 'dang_xu_ly';
+      const displayName = currentUser?.fullName || currentUser?.email || 'Người dùng';
+      await order.addStatusHistory('dang_xu_ly', currentUser._id, `${displayName} bắt đầu in tranh`);
     }
 
     // Nếu tất cả tranh đã in, cập nhật printingStatus của đơn

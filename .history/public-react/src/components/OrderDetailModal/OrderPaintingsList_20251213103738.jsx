@@ -165,7 +165,7 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
                           </>
                         ) : (
                           <>
-                            <i className="bi bi-check-circle me-1"></i>Đã in
+                            <i className="bi bi-check-circle me-1"></i>Đánh dấu đã in
                           </>
                         )}
                       </button>

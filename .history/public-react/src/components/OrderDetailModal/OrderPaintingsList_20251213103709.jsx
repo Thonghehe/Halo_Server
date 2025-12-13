@@ -165,7 +165,7 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
                           </>
                         ) : (
                           <>
-                            <i className="bi bi-check-circle me-1"></i>Đã in
+                            <i className="bi bi-check-circle me-1"></i>Đánh dấu đã in
                           </>
                         )}
                       </button>
@@ -190,27 +190,6 @@ export default function OrderPaintingsList({ paintings, getPaintingMentions, onM
                       <small className="text-muted d-block mt-1">
                         {new Date(painting.receivedAt).toLocaleString('vi-VN')}
                       </small>
-                    )}
-                    {/* Nút nhận tranh cho role sản xuất */}
-                    {canReceive && !painting.receivedByProduction && (
-                      <div className="mt-2">
-                        <button
-                          className="btn btn-sm btn-info"
-                          onClick={() => handleReceive(painting._id)}
-                          disabled={receiving[painting._id]}
-                        >
-                          {receiving[painting._id] ? (
-                            <>
-                              <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                              Đang xử lý...
-                            </>
-                          ) : (
-                            <>
-                              <i className="bi bi-check-circle me-1"></i>Nhận tranh
-                            </>
-                          )}
-                        </button>
-                      </div>
                     )}
                   </div>
                 )}

@@ -139,11 +139,12 @@ export function useOrderPermissions(order, user) {
   }, [user, order, hasFrameCutting]);
 
   // Kiểm tra user có thể nhận tranh/khung không
+  // BỎ logic nhận tranh cho sản xuất ở ngoài, chỉ dùng nút nhận từng tranh
   const canReceiveProduction = useMemo(() => {
     if (!user || !order) return { canReceive: false, type: null };
     
     const userRoles = user.roles || [];
-    const isSanXuat = userRoles.includes('sanXuat');
+    // const isSanXuat = userRoles.includes('sanXuat');
     const isDongGoi = userRoles.includes('dongGoi');
     const currentStatus = order.status || 'moi_tao';
     const printingStatus = order.printingStatus || 'chua_in';
@@ -154,17 +155,19 @@ export function useOrderPermissions(order, user) {
     }
     
     // Sản xuất có thể nhận tranh khi không ở trạng thái chờ đóng gói và đã in xong
-    if (isSanXuat && currentStatus !== 'cho_dong_goi' && printingStatus === 'da_in') {
-      return { canReceive: true, type: 'tranh' };
-    }
+    // BỎ - chỉ dùng nút nhận từng tranh
+    // if (isSanXuat && currentStatus !== 'cho_dong_goi' && printingStatus === 'da_in') {
+    //   return { canReceive: true, type: 'tranh' };
+    // }
     
     // Sản xuất có thể nhận khung khi đã cắt khung xong
-    if (isSanXuat) {
-      const frameCuttingStatus = order.frameCuttingStatus || 'chua_cat';
-      if (frameCuttingStatus === 'da_cat_khung') {
-        return { canReceive: true, type: 'khung' };
-      }
-    }
+    // Giữ lại logic nhận khung vì không có nút nhận khung từng cái
+    // if (isSanXuat) {
+    //   const frameCuttingStatus = order.frameCuttingStatus || 'chua_cat';
+    //   if (frameCuttingStatus === 'da_cat_khung') {
+    //     return { canReceive: true, type: 'khung' };
+    //   }
+    // }
     
     return { canReceive: false, type: null };
   }, [user, order]);

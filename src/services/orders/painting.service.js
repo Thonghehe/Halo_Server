@@ -174,11 +174,15 @@ export const receivePaintingByProduction = async (orderId, paintingId, currentUs
 
     // Nếu có tranh cần vào khung và tất cả tranh cần vào khung đã được nhận
     if (totalPaintingsNeedFrame > 0 && receivedPaintingsNeedFrame === totalPaintingsNeedFrame) {
-      // Cập nhật printingStatus và status khi tất cả tranh cần vào khung đã được nhận
-      if (order.printingStatus === 'da_in' && order.status === 'dang_xu_ly') {
-        if (order.canTransitionTo('cho_san_xuat')) {
+      // Luôn cập nhật printingStatus thành san_xuat_da_nhan_tranh khi tất cả tranh cần vào khung đã được nhận
+      if (order.printingStatus === 'da_in') {
+        order.printingStatus = 'san_xuat_da_nhan_tranh';
+      }
+      
+      // Cập nhật status nếu đơn đang ở trạng thái có thể chuyển sang cho_san_xuat
+      if (order.status === 'dang_xu_ly' || order.status === 'cho_san_xuat') {
+        if (order.status !== 'cho_san_xuat' && order.canTransitionTo('cho_san_xuat')) {
           order.status = 'cho_san_xuat';
-          order.printingStatus = 'san_xuat_da_nhan_tranh';
           const displayName = currentUser?.fullName || currentUser?.email || 'Người dùng';
           await order.addStatusHistory('cho_san_xuat', currentUser._id, `${displayName} đã nhận đủ tranh cần vào khung, chờ sản xuất vào khung`);
         }

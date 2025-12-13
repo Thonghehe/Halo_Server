@@ -56,16 +56,34 @@ export const markPaintingPrinted = async (orderId, paintingId, currentUser) => {
     const totalPaintings = order.paintings.length;
     const printedPaintings = order.paintings.filter(p => p.isPrinted).length;
 
+    // Lấy printingStatus hiện tại, mặc định là 'chua_in' nếu null/undefined
+    const currentPrintingStatus = order.printingStatus || 'chua_in';
+    const currentStatus = order.status || 'moi_tao';
+
+    // Nếu có ít nhất 1 tranh đã in, cập nhật status từ 'moi_tao' sang 'dang_xu_ly'
+    if (printedPaintings > 0 && currentStatus === 'moi_tao') {
+      if (order.canTransitionTo('dang_xu_ly')) {
+        order.status = 'dang_xu_ly';
+        const displayName = currentUser?.fullName || currentUser?.email || 'Người dùng';
+        await order.addStatusHistory('dang_xu_ly', currentUser._id, `${displayName} bắt đầu in tranh`);
+      }
+    }
+
     // Nếu tất cả tranh đã in, cập nhật printingStatus của đơn
-    if (printedPaintings === totalPaintings && order.printingStatus !== 'da_in') {
+    if (printedPaintings === totalPaintings) {
       const allowedStatuses = ['chua_in', 'cho_in', 'dang_in', 'cho_in_lai'];
-      if (allowedStatuses.includes(order.printingStatus)) {
+      if (allowedStatuses.includes(currentPrintingStatus) && currentPrintingStatus !== 'da_in') {
         order.printingStatus = 'da_in';
         const displayName = currentUser?.fullName || currentUser?.email || 'Người dùng';
         await order.addStatusHistory(order.status, currentUser._id, `${displayName} đã in xong tất cả tranh`);
       }
-    } else if (printedPaintings > 0 && order.printingStatus === 'chua_in') {
-      order.printingStatus = 'dang_in';
+    } 
+    // Nếu có ít nhất 1 tranh đã in nhưng chưa đủ, cập nhật thành 'dang_in'
+    else if (printedPaintings > 0) {
+      // Chỉ cập nhật nếu printingStatus chưa phải là 'dang_in' hoặc 'da_in'
+      if (currentPrintingStatus === 'chua_in' || currentPrintingStatus === 'cho_in' || !currentPrintingStatus) {
+        order.printingStatus = 'dang_in';
+      }
     }
 
     await order.save();
@@ -179,12 +197,18 @@ export const receivePaintingByProduction = async (orderId, paintingId, currentUs
         order.printingStatus = 'san_xuat_da_nhan_tranh';
       }
       
-      // Cập nhật status nếu đơn đang ở trạng thái có thể chuyển sang cho_san_xuat
-      if (order.status === 'dang_xu_ly' || order.status === 'cho_san_xuat') {
-        if (order.status !== 'cho_san_xuat' && order.canTransitionTo('cho_san_xuat')) {
-          order.status = 'cho_san_xuat';
-          const displayName = currentUser?.fullName || currentUser?.email || 'Người dùng';
-          await order.addStatusHistory('cho_san_xuat', currentUser._id, `${displayName} đã nhận đủ tranh cần vào khung, chờ sản xuất vào khung`);
+      // Luôn cập nhật status thành cho_san_xuat khi printingStatus là san_xuat_da_nhan_tranh
+      // (nếu có tranh cần vào khung và tất cả đã được nhận)
+      // Mở rộng điều kiện: không chỉ kiểm tra canTransitionTo, mà còn kiểm tra các trạng thái hợp lệ
+      const validStatusesForTransition = ['moi_tao', 'dang_xu_ly', 'cho_san_xuat'];
+      if (order.printingStatus === 'san_xuat_da_nhan_tranh' && (hasTranhKhung || hasTranhTron)) {
+        if (order.status !== 'cho_san_xuat') {
+          // Kiểm tra nếu có thể chuyển, hoặc nếu đang ở trạng thái hợp lệ
+          if (order.canTransitionTo('cho_san_xuat') || validStatusesForTransition.includes(order.status)) {
+            order.status = 'cho_san_xuat';
+            const displayName = currentUser?.fullName || currentUser?.email || 'Người dùng';
+            await order.addStatusHistory('cho_san_xuat', currentUser._id, `${displayName} đã nhận đủ tranh cần vào khung, chờ sản xuất vào khung`);
+          }
         }
       }
     }
